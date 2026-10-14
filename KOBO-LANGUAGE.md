@@ -1,7 +1,12 @@
 # The Kobo Programming Language
 
+Kobo is a modern, general-purpose programming language that reduces syntactic
+complexity, promotes consistency, and makes software intent more explicit while
+leveraging the full capabilities of the .NET platform.
+
 For installation and step-by-step standalone, mixed-project, and single-file
-walkthroughs, start with [Get Started with Kobo](GET-STARTED.md).
+walkthroughs, start with [Get Started with Kobo](GET-STARTED.md). For the
+language's design goals, see [Why Kobo?](WHY-KOBO.md).
 
 ## Hello, world
 

@@ -1,9 +1,12 @@
 # Kobo
 
-Kobo is a preview programming language for .NET. It brings a compact,
-statically typed, object-oriented syntax to the .NET ecosystem, with support
-for classes, functions, generics, query expressions, and the libraries and
-types available to .NET applications.
+Kobo is a modern, general-purpose programming language that reduces syntactic
+complexity, promotes consistency, and makes software intent more explicit while
+leveraging the full capabilities of the .NET platform.
+
+Kobo is currently in preview. It brings a compact, statically typed,
+object-oriented syntax to .NET, with support for classes, functions, generics,
+query expressions, and the libraries and types available to .NET applications.
 
 ## How Kobo works
 
@@ -39,3 +42,4 @@ single-file utility.
 
 - [Get Started with Kobo](GET-STARTED.md)
 - [Kobo language specification and guide](KOBO-LANGUAGE.md)
+- [Why Kobo?](WHY-KOBO.md)

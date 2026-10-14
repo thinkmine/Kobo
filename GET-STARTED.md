@@ -1,8 +1,13 @@
 # Get Started with Kobo
 
-Kobo lets you build standalone .NET programs, add Kobo source files to an
-existing C# project, or keep a small utility and its build settings in one file.
-This guide walks through each approach.
+Kobo is a modern, general-purpose programming language that reduces syntactic
+complexity, promotes consistency, and makes software intent more explicit while
+leveraging the full capabilities of the .NET platform.
+
+Use Kobo to build standalone .NET programs, add Kobo source files to an existing
+C# project, or keep a small utility and its build settings in one file. This
+guide walks through each approach. Learn more about [why Kobo](WHY-KOBO.md) or
+explore the [language guide](KOBO-LANGUAGE.md).
 
 ## 1. Prepare your environment
 
