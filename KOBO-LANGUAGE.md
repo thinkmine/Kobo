@@ -880,19 +880,18 @@ first porting the rest of the codebase. Existing package references and project
 build settings remain the place to configure the application's dependencies.
 
 The important distinction is that the Kobo files are **part of the same
-compilation**, not a separately built component. BuildTools transforms them
-during the normal project build and contributes their generated declarations
-to the project's compiler. C# code can construct Kobo-defined classes and call
-their members directly. Kobo declarations can also refer to accessible types
-defined elsewhere in the project; the final project compilation checks these
-cross-file references. This does not make every inference step project-wide:
-explicit types remain useful at language boundaries.
+compilation**, not a separately built component. BuildTools integrates Kobo
+source files into the normal project build, so C# code can construct
+Kobo-defined classes and call their members directly. Kobo declarations can
+also refer to accessible types defined elsewhere in the project; the project
+compilation checks these cross-file references. This does not make every
+inference step project-wide: explicit types remain useful at language
+boundaries.
 
-Because both sets of source files produce one project assembly, there is no
-separate Kobo DLL to copy, no manual transpilation step to keep in sync, and no
-extra build command to insert before `dotnet build`. The same workflow can run
-locally and in continuous integration. Kobo files in the same namespace also
-share generated global-function containers and union definitions.
+Both languages contribute to the same project assembly, so the existing
+project build and deployment workflow remains in place. The same workflow can
+run locally and in continuous integration. Kobo files in the same namespace
+also share generated global-function containers and union definitions.
 
 ### Example: call a Kobo class from C#
 

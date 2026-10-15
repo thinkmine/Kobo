@@ -62,8 +62,8 @@ constructs, and keep attention on what the code is doing.
 
 ## Compose queries naturally
 
-Kobo supports select-first query expressions that translate into the .NET
-sequence-query ecosystem:
+Kobo supports select-first query expressions that work with .NET sequence
+types and query operators:
 
 ```kobo
 var names = select person from people
@@ -125,10 +125,9 @@ predictable:
    generate while keeping intent visible.
 4. **Intent-oriented syntax.** Kobo's query expressions describe the source,
    filtering, ordering, and projection in a regular sequence.
-5. **.NET tooling.** Kobo's compiler and project integration provide a path to
-   the established .NET compiler, runtime, and tooling ecosystem. Reliable,
-   deterministic diagnostics and validation can make generated code easier to
-   check and correct.
+5. **.NET tooling.** Kobo is built for the established .NET runtime, libraries,
+   and tooling ecosystem. Reliable, deterministic diagnostics and validation
+   can make generated code easier to check and correct.
 
 These are design opportunities, not evidence that Kobo already outperforms
 other languages for AI code generation. Models have seen far more C# than
