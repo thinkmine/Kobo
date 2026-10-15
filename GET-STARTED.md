@@ -10,6 +10,8 @@ grammar, consistent declaration patterns, and streamlined syntax aim to make
 code easier to generate, understand, validate, and maintain. Kobo combines
 modern language design with the maturity and performance of the .NET platform.
 
+**Version:** `0.1.8-preview`
+
 Use Kobo to build standalone .NET programs, add Kobo source files to an existing
 C# project, or keep a small utility and its build settings in one file. This
 guide walks through each approach. Learn more about [why Kobo](WHY-KOBO.md) or

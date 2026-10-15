@@ -10,6 +10,8 @@ grammar, consistent declaration patterns, and streamlined syntax aim to make
 code easier to generate, understand, validate, and maintain. Kobo combines
 modern language design with the maturity and performance of the .NET platform.
 
+**Version:** `0.1.8-preview`
+
 Kobo is currently in preview. It brings a compact, statically typed,
 object-oriented syntax to .NET, with support for classes, functions, generics,
 query expressions, and the libraries and types available to .NET applications.
