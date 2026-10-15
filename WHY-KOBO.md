@@ -1,10 +1,14 @@
 # Why Kobo?
 
-Kobo is a modern, general-purpose programming language for .NET, designed to
-reduce syntactic complexity, promote consistency, and make software intent
-more explicit while leveraging the full capabilities of the .NET platform.
-AI-assisted code generation is a core design tenet: Kobo is shaped to support
-both human developers and AI systems working together to create software.
+Kobo is an AI-conscious, general-purpose programming language built for the
+.NET ecosystem. Designed from the ground up with both human developers and AI
+code generation in mind, Kobo emphasizes syntactic consistency, expressive
+programming constructs, and reduced complexity. Unlike traditional languages
+that evolved primarily around human-written code, Kobo recognizes AI as an
+increasingly important participant in software development. Its predictable
+grammar, consistent declaration patterns, and streamlined syntax aim to make
+code easier to generate, understand, validate, and maintain. Kobo combines
+modern language design with the maturity and performance of the .NET platform.
 
 Kobo aims to make everyday code easier to read and write without giving up the
 reach of .NET. It is statically typed, object-oriented, and designed to work
