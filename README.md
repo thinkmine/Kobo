@@ -50,6 +50,7 @@ The getting started guide covers installing the .NET 11 SDK, building a
 standalone program, integrating Kobo into a C# project, and writing a
 single-file utility.
 
+- [Why Kobo?](WHY-KOBO.md)
 - [Get Started with Kobo](GET-STARTED.md)
 - [Kobo language specification and guide](KOBO-LANGUAGE.md)
-- [Why Kobo?](WHY-KOBO.md)
+
