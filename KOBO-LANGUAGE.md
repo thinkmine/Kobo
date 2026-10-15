@@ -1,3 +1,5 @@
+<img src="kobo-emerald.png" alt="Kobo logo" width="48" height="48" />
+
 # The Kobo Programming Language
 
 Kobo is an AI-conscious, general-purpose programming language built for the
