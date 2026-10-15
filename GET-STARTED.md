@@ -2,15 +2,11 @@
 
 # Get Started with Kobo
 
-Kobo is an AI-conscious, general-purpose programming language built for the
-.NET ecosystem. Designed from the ground up with both human developers and AI
-code generation in mind, Kobo emphasizes syntactic consistency, expressive
-programming constructs, and reduced complexity. Unlike traditional languages
-that evolved primarily around human-written code, Kobo recognizes AI as an
-increasingly important participant in software development. Its predictable
-grammar, consistent declaration patterns, and streamlined syntax aim to make
-code easier to generate, understand, validate, and maintain. Kobo combines
-modern language design with the maturity and performance of the .NET platform.
+Kobo is an AI-conscious, general-purpose language for building .NET software.
+Designed for both human developers and AI code generation, it pairs consistent
+declarations and expressive constructs with streamlined syntax. These choices
+aim to make code easier to generate, understand, validate, and maintain while
+drawing on the maturity and performance of the .NET platform.
 
 **Version:** `0.1.8-preview`
 
@@ -224,8 +220,8 @@ Hello, Ada, from Kobo!
 ```
 
 Use `dotnet build`, not a separate `kobo build`, for this workflow. BuildTools
-discovers Kobo files recursively, excludes build output directories, and adds
-their generated declarations to the project compilation.
+discovers Kobo files recursively, excludes build output directories, and
+includes them in the project build.
 
 Configure NuGet dependencies, local DLL references, SDK selection, and build
 properties in the project. Do not put single-file app directives in embedded

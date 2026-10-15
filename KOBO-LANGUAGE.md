@@ -2,15 +2,12 @@
 
 # The Kobo Programming Language
 
-Kobo is an AI-conscious, general-purpose programming language built for the
-.NET ecosystem. Designed from the ground up with both human developers and AI
-code generation in mind, Kobo emphasizes syntactic consistency, expressive
-programming constructs, and reduced complexity. Unlike traditional languages
-that evolved primarily around human-written code, Kobo recognizes AI as an
-increasingly important participant in software development. Its predictable
-grammar, consistent declaration patterns, and streamlined syntax aim to make
-code easier to generate, understand, validate, and maintain. Kobo combines
-modern language design with the maturity and performance of the .NET platform.
+Kobo is an AI-conscious, general-purpose programming language for .NET. Its
+predictable grammar, consistent declaration patterns, and expressive constructs
+are designed with human developers and AI code generation in mind. By reducing
+syntactic complexity, Kobo aims to make software intent clearer and code easier
+to generate, validate, and maintain, backed by the maturity and performance of
+the .NET platform.
 
 **Version:** `0.1.8-preview`
 
@@ -960,9 +957,9 @@ directives such as `#:package` are not accepted in generator inputs.
 BuildTools is a build-time tool and does not require deploying the standalone
 Kobo command-line compiler with the application.
 
-The Kobo VS Code extension supplies highlighting and transformation diagnostics
+The Kobo VS Code extension supplies highlighting and language diagnostics
 when editing `.kobo` files. The C# language service supplies completion and type
-checking for references to generated types when its compiler host can load and
+checking for references to Kobo-defined types when its compiler host can load and
 run BuildTools. Installing the editor extension alone does not enable project
 compilation; the project needs the BuildTools package.
 

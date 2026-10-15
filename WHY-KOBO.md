@@ -3,14 +3,13 @@
 # Why Kobo?
 
 Kobo is an AI-conscious, general-purpose programming language built for the
-.NET ecosystem. Designed from the ground up with both human developers and AI
-code generation in mind, Kobo emphasizes syntactic consistency, expressive
-programming constructs, and reduced complexity. Unlike traditional languages
-that evolved primarily around human-written code, Kobo recognizes AI as an
-increasingly important participant in software development. Its predictable
-grammar, consistent declaration patterns, and streamlined syntax aim to make
-code easier to generate, understand, validate, and maintain. Kobo combines
-modern language design with the maturity and performance of the .NET platform.
+.NET ecosystem, with human-AI collaboration as a core design consideration.
+Where traditional languages evolved primarily around human-written code, Kobo
+recognizes AI code generation as an increasingly important part of software
+development. Consistent declarations, predictable grammar, and expressive,
+streamlined constructs aim to make code easier to generate, understand,
+validate, and maintain. Kobo combines these modern design goals with the
+maturity and performance of the .NET platform.
 
 **Version:** `0.1.8-preview`
 
@@ -173,7 +172,7 @@ directions include:
 | Functional programming | Lambdas, nullable types, and union types for variables | Explore broader immutable-data patterns, pattern matching, and expression-oriented control flow |
 | Errors | Exception handling | Explore explicit error-result types alongside exceptions |
 | Compile-time work | Compiler and project build tooling | Explore language-level generation and validation features |
-| Developer tooling | VS Code extension and language-server support | Continue improving actionable and machine-readable diagnostics, transformations, and semantic tooling |
+| Developer tooling | VS Code extension and language-server support | Continue improving actionable and machine-readable diagnostics, code editing, and semantic tooling |
 
 These are design directions, not promises that every capability is already
 implemented.
