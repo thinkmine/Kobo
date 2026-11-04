@@ -19,6 +19,8 @@ access to .NET libraries, and native AI prompts and tools.
   existing .NET projects.
 - [VS Code extension](Kobo.Lang.VSCode/README.md): diagnostics, highlighting,
   and workspace-wide completion.
+- [Visual Studio 2026 extension](Kobo.Lang.VisualStudio/README.md): Kobo editing
+  support on Windows through the shared language server.
 
 ## Language at a glance
 
