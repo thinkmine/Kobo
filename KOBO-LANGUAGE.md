@@ -1,5 +1,59 @@
 # The Kobo Programming Language
 
+## Language version 0.1.25
+
+This specification describes Kobo source as accepted by the version 0.1.25
+compiler and runtime. Examples are Kobo unless marked as configuration or
+console output. Language syntax, type rules, runtime behavior, errors, and
+tooling limits are described separately; examples do not grant forms that
+the accompanying rules reject.
+
+### Reading this specification
+
+- **Lexical forms and program structure:** source files, modules, imports,
+  statement boundaries, comments, and literals.
+- **Values and types:** declarations, nullability, collections, native JSON,
+  console commands, unions, expressions, and conversions.
+- **Control flow and functions:** branching, iteration, lambdas, delegates,
+  generics, asynchronous operations, and exceptions.
+- **Type declarations:** classes, interfaces, structs, records, enums,
+  events, properties, indexers, constructors, operators, extensions, and
+  native external calls.
+- **Applications and tools:** scripts, application directives, typed AI
+  prompts, project integration, editor behavior, and configuration.
+
+The precise requirements within each section take precedence over a summary
+or an illustrative snippet. A .NET library may expose additional types or
+members; importing a namespace does not change Kobo's syntax or install a
+dependency. A host/project must supply external dependencies separately.
+
+### Lexical and binding conventions
+
+Kobo is case-sensitive. Identifiers name types, modules, members, variables,
+and parameters; a name must be declared in an accessible scope before it can
+be used. A qualified module or import path separates namespace segments
+with `/`; member access uses `.`. A declaration keyword and its colon/type
+are adjacent (`function:int`, `var:string`, `class:Name`). A space after a
+declaration colon is invalid. Parameters use `Type name`, and attributes
+and modifiers precede declarations in square brackets.
+
+Braces delimit statement blocks and type bodies. Ordinary single-line
+statements may omit their final semicolon; multiline query statements must
+end with one. `//` starts a line comment; `/* ... */` encloses a block
+comment. String literals use quotes, `@"..."` for verbatim text, or triple
+quotes for raw multiline text. `${expression}` interpolates Kobo expressions;
+`\${...}` remains literal. Prompt bodies have distinct lexical rules
+documented under [native AI prompts](#native-ai-prompts).
+
+Local `var` uses its initializer to infer a type. Explicit annotations are
+available for variables, fields, parameters, members, and return values.
+`?`, `?.`, and `??` handle nullable values. `union(T,U)` is permitted as a
+variable type and preserves the declared case order. At a public API boundary,
+ensure types are accessible from the consuming module. Name resolution,
+assignments, overload selection, and operator legality are checked during
+compilation; unknown names and incompatible types are errors rather than
+implicit new declarations.
+
 For installation and step-by-step standalone, mixed-project, and single-file
 walkthroughs, start with [Get Started with Kobo](GET-STARTED.md).
 
@@ -20,7 +74,7 @@ module Examples/Hello
 {
     [public, static] function:void Main(string[] args)
     {
-        Console.WriteLine("Hello, world!")
+        Print("Hello, world!")
     }
 }
 ```
@@ -51,10 +105,10 @@ structure to the reader but does not replace braces.
 ### Imports
 
 See the [complete imports and type replacement guide](IMPORTS.md) for syntax,
-scope rules, generated C#, and migration examples.
+scope rules, and migration examples.
 
-`import` generates file-level C# `using` directives. It never replaces references
-in your code with fully qualified type names:
+`import` makes namespaces and types available in the current file. It does not
+replace references in your source with fully qualified type names:
 
 ```kobo
 import * from System
@@ -81,16 +135,6 @@ import Math as M from System
 import { Console as Output, static Math } from System
 ```
 
-These generate:
-
-```csharp
-using Sys = global::System;
-using Math = global::System.Math;
-using M = global::System.Math;
-using Output = global::System.Console;
-using static global::System.Math;
-```
-
 Calls such as `M.Sqrt(144)`, `Sys.Math.Sqrt(144)`, and `Output.WriteLine(...)`
 remain unchanged. All `import` forms must be at file scope, even when the file
 has a `module`. `static` applies only to its own compound entry. Static aliases
@@ -115,9 +159,8 @@ var twelve_2 = M.Sqrt(144)
 var twelve_3 = Math.Sqrt(256)
 ```
 
-The calls become `global::System.Math.Sqrt(144)` and
-`global::System.Math.Sqrt(256)`, including in `#:script` files. No C# alias is
-emitted for these `using` declarations.
+Both calls resolve directly to the type `System.Math`, including in
+`#:script` files. A type replacement does not add an import alias.
 
 Replacement declarations can appear at file, class, function, or nested-block
 scope. They take effect after the completed declaration and respect lexical
@@ -125,12 +168,12 @@ shadowing. Duplicate names in one scope and conflicts with declared types are
 errors. `using` does not accept wildcard or static entries.
 
 For generic definitions, write `using List as Items from System/Collections/Generic`
-and use `Items<int>`. Open generic definitions cannot be represented as C# aliases
-by `import`; use replacement or `import * from System/Collections/Generic`.
+and use `Items<int>`. Named imports cannot alias an open generic definition;
+use type replacement or `import * from System/Collections/Generic`.
 
 Both keywords use `/` for namespace paths and `.` for member access. Neither
 installs packages. Legacy `import Namespace`, bare `Type from Namespace`,
-and C# directive spelling such as `using System;` remain invalid. A namespace
+and bare `using System;` remain invalid. A namespace
 alias uses `import * as Sys from System`, not the old `import System as Sys`.
 Directly qualified external types remain restricted; use an import, namespace
 alias, or explicit type replacement instead.
@@ -208,8 +251,8 @@ class:Person
 }
 ```
 
-The shorthand is valid only for fields in a class, struct, or record. It emits
-`readonly Type Name = value;`; the field has C#'s default private accessibility.
+The shorthand is valid only for fields in a class, struct, or record. The
+field is private unless an access modifier is specified.
 
 ### Nullability
 
@@ -254,8 +297,7 @@ or entries with unknown types require an explicit `var:dictionary<K, V>`.
 declaration can be initialized directly from a JSON object literal:
 
 ```kobo
-var:json information =
-{
+var:json information = {
     "type": "music",
     "data":[
         "one",
@@ -288,17 +330,31 @@ nested objects stay `json` values, so member access chains naturally. Values
 assigned to properties — primitives, lists, dictionaries or other `json`
 values — are converted back into the underlying JSON document.
 
-`json` values convert to and from text with `tostring` and `fromstring`:
+`StringValue` returns JSON text. Assign JSON text to a `json` variable to
+parse it, or assign a `json` value to a `string` variable to serialize it.
+These conversions are implicit; invalid JSON text throws `JsonException`.
 
 ```kobo
-var text = information.tostring()            // the JSON text
-var:json reloaded = json.fromstring(text)    // parses JSON text
+var:string text = information.StringValue    // the JSON text
+var:json reloaded = text                     // parses JSON text
+var:string copy = reloaded                    // implicit conversion to string
 ```
 
-The transpiler represents `json` values with a generated runtime class backed
-by `System.Text.Json` (`JsonNode`), shared across all files compiled together.
+`json` values can be shared across files compiled together. Converting
+invalid JSON text implicitly throws `JsonException`.
 Indexer access is also supported: `information["type"]` and
 `information.data[0]`.
+
+### Console commands
+
+`Print(...)` writes a line and accepts no arguments, a value, a format string
+with arguments, or a character array with an offset and count. `Input()` reads
+a line; `Input("Name: ")` writes the prompt without a newline before reading
+a line. At end of input, `Input` returns `null`. `Print` returns no value.
+
+```kobo
+Print("Name: {0}", Input("Enter your name: "))
+```
 
 ### Union variables
 
@@ -438,10 +494,9 @@ increment is an error (reported during transformation for literal `0`,
 otherwise as `ArgumentOutOfRangeException` at runtime).
 
 Bounds and increments are integer expressions evaluated once, in order, at
-loop entry. The transpiler emits a shared iterator using a direction-aware
-`while` loop; `foreach` retains its usual `break`, `continue` and scoping
-behavior. The iterator is generated once per compilation, only when needed.
-The old `foreach item in 0..5` syntax is rejected; C# slice expressions such
+loop entry. `foreach` retains its usual `break`, `continue`, and scoping
+behavior.
+The old `foreach item in 0..5` syntax is rejected; slice expressions such
 as `items[1..3]` are unchanged.
 
 `while` repeats while its condition is true:
@@ -470,14 +525,14 @@ A function declares its return type before its name:
     return left + right
 }
 
-[public, static] function:void Print(string message)
+[public, static] function:void WriteMessage(string message)
 {
-    Console.WriteLine(message)
+    Print(message)
 }
 ```
 
 Parameters must use `Type name`; `name: Type` declarations are rejected.
-`params` parameters are supported and preserved in C#, for example
+`params` parameters are supported, for example
 `function:int Count(params int[] values) => values.Length`. Callers may supply
 zero or more individual arguments or pass an array.
 The return type is required; use `void` when no value is returned. The declaration keyword is `function`,
@@ -501,7 +556,7 @@ Top-level functions in a `#:script` file must also have unique names.
 Unqualified calls to global functions are emitted as `Global.Name(arguments)`
 when no local callable takes precedence. This includes repeated and nested calls
 and functions with parameters. Required arguments must still be supplied; a
-missing or incompatible argument produces a C# compilation error, not an
+missing or incompatible argument produces a compilation error, not an
 unknown-function error.
 
 ### Generics
@@ -553,12 +608,6 @@ delegate:()-> void Notify
 delegate:(T value)-> T TransformValue<T>
 ```
 
-The first declaration generates:
-
-```csharp
-public delegate int Combine(int left, int right);
-```
-
 Use the name in variable and parameter types:
 
 ```kobo
@@ -569,11 +618,12 @@ var result = add(20, 22)
 Declarations may appear at global scope or inside types, not inside functions.
 Access modifiers and attributes follow ordinary type rules; global delegates
 default to `internal`, nested delegates to `private`. Generic constraints,
-`ref`/`out`, defaults, and `params` parameters use C# delegate semantics.
+`ref`/`out`, defaults, and `params` parameters follow the matching Kobo
+function parameter rules.
 Declaration-ending semicolons are optional.
 
 A lambda assigned to a `->void` delegate type cannot return a value; the
-transpiler reports an error pointing at the offending `return` statement.
+compiler reports an error pointing at the offending `return` statement.
 A bare `return` is allowed, as are value returns inside nested lambdas.
 
 A function with a final delegate parameter can accept a trailing lambda block:
@@ -613,7 +663,7 @@ Search(numbers){
 }
 ```
 
-This predicate becomes a lambda argument with `return x == 7;` in its C# body.
+This predicate is evaluated as a lambda argument returning `x == 7`.
 
 For a delegate with no parameters, the arrow can be omitted:
 
@@ -649,7 +699,7 @@ kinds, including structs, records, and delegates, are unaffected.
     [public] function:void Greet()
     {
         visits += 1
-        Console.WriteLine($"Hello, {Name}!")
+        Print("Hello, ${Name}!")
     }
 }
 ```
@@ -767,7 +817,7 @@ Declare an enum with `enum:Name` and comma-separated members:
 }
 ```
 
-This generates a C# `public enum Color` with the same members and values.
+The enum has the specified members and values.
 Use members as `Color.Green`. Values default to consecutive integers starting
 at zero; an explicit value changes the following implicit values.
 
@@ -775,7 +825,8 @@ An underlying integer type may be specified with `enum:Color : byte`.
 Attributes such as `[Flags]`, access modifiers, trailing commas, and compact
 declarations (`enum:Color { Red, Green, Blue }`) are supported. Enums may be
 top-level or nested inside types, but not inside functions. Enum members use
-commas, not statement-ending semicolons. C# checks values and underlying types.
+commas, not statement-ending semicolons. Enum values must fit the underlying
+integer type.
 
 ### Events
 
@@ -795,15 +846,15 @@ Declare an event member with `event:DelegateType EventName`:
 }
 ```
 
-The event generates `public event ChangedHandler Changed;`.
 Subscribe with `publisher.Changed += handler` and unsubscribe with
 `publisher.Changed -= handler`. Events may use named delegates, imported delegate
 types such as `Action`, or inline types such as `(int)->void`.
 
 Events must be type members, not globals or local variables. Class, struct, and
-record events default to `private`; interface events follow C# interface rules.
-Access modifiers, attributes, and `static` are supported. Declaration-ending
-semicolons are optional. C# enforces delegate types and event invocation/access rules.
+record events default to `private`; interface events follow their declared
+contract. Access modifiers, attributes, and `static` are supported.
+Declaration-ending semicolons are optional. Only compatible delegates can
+subscribe to an event; only its declaring type can invoke it.
 
 ### Indexers
 
@@ -863,14 +914,15 @@ Inside a class, struct, or record, declare a constructor using `new(...)`:
 }
 ```
 
-These become `public TestClass() : this(10)` and
-`public TestClass(int value) : base(value)` in C#. A bare `new()` constructor
-defaults to `private`, like ordinary class members. C# constructor access
-modifiers are supported, including `protected internal` and `private protected`
+The parameterless constructor delegates to the `int` overload; the second
+invokes the base constructor. A bare `new()` constructor defaults to
+`private`, like ordinary class members. Constructor access modifiers include
+`protected internal` and `private protected`
 combinations for classes. Struct constructors do not allow `protected`.
 Other modifiers, such as `virtual`, `override`, or `static`, are rejected.
-Parameters follow ordinary function rules. Initializers and `base.Member`
-access use the same syntax and semantics as C#.
+Parameters follow ordinary function rules. Initializers select another
+constructor with `this(...)` or a base constructor with `base(...)`.
+`base.Member` accesses a base member.
 
 ### Operator overloads and conversions
 
@@ -893,14 +945,13 @@ Declare operators inside classes, structs, or records:
 }
 ```
 
-These generate `public static PersonBase operator +(PersonBase a, PersonBase b)`,
-`public static implicit operator PersonBase(string str)`, and
-`public static explicit operator PersonBase(string str)`, respectively.
-Operators are always generated as `public static`; `static` need not be written.
-Unary and binary C# overloadable symbols are supported. Bodies follow normal
-function rules, including optional statement semicolons and expression bodies.
-C# enforces operator arity, enclosing-type requirements, paired operators, and
-conversion legality. Operators cannot be declared globally or inside functions.
+The `+` form overloads addition. `=` declares an implicit conversion and
+`cast` declares an explicit conversion. Operators are public and static;
+`static` need not be written. Unary and binary overloadable symbols are
+supported. Bodies follow normal function rules, including expression bodies
+and optional statement semicolons. The operator must have the proper number
+of operands, involve its containing type, and obey paired-operator and
+conversion rules. Operators cannot be declared globally or inside functions.
 
 ### Native extern functions
 
@@ -972,7 +1023,7 @@ Extension blocks share an `Extensions` container within a file. The block is
 internal by default; `public` is its only supported explicit modifier. Blocks
 in one file must agree on accessibility. Members have their own modifiers and
 default to `private`, as in classes. `this` refers to the receiver in instance
-methods, properties, and indexer bodies; it becomes `@instance` in generated C#.
+methods, properties, and indexer bodies; it refers to the current receiver.
 The receiver is always declared as `extension(Type @instance)`. Static members
 have no receiver instance and using `this` inside them is a Kobo error.
 The former `extension(Type receiver)` source syntax is no longer accepted.
@@ -1214,20 +1265,20 @@ dotnet ./build/App.dll
 
 | Directive | Purpose | Example |
 | --- | --- | --- |
-| `#:script` | Uses native C# top-level program semantics for this Kobo source file. | `#:script` |
+| `#:script` | Allows top-level Kobo statements and local functions in one source file. | `#:script` |
 | `#:sdk` | Selects an SDK for the app build. SDK names may carry a version where supported by the installed SDK tooling. | `#:sdk Microsoft.NET.Sdk` |
 | `#:property` | Supplies an MSBuild property using `Name=Value`. Repeat for additional properties. | `#:property Nullable=enable` |
 | `#:package` | Adds a NuGet dependency, optionally pinned with `@version`. Repeat for additional dependencies. | `#:package Newtonsoft.Json@13.0.3` |
 
-Use `#:script` to give one source file native C# top-level program semantics.
+Use `#:script` to enable top-level Kobo statements in one source file.
 The former `#:app` marker is no longer accepted. To execute a file directly,
 place `#:script` on its exact first line and use `kobo run path/to/file.kobo`.
-This requires the .NET 11 SDK: Kobo transpiles to temporary C# and launches
+This requires the .NET 11 SDK: Kobo compiles and launches
 `dotnet run --file`, forwarding console I/O and the application exit code.
 Place it before Kobo code; it takes no value. Top-level variables become local
 variables, and top-level functions become local functions that can capture
 those variables. These functions are not emitted in the generated `Global`
-class. Type declarations remain ordinary top-level C# types.
+class. Type declarations remain ordinary top-level Kobo types.
 
 ```kobo
 #:script
@@ -1258,28 +1309,27 @@ var:string label4 = """
                     """
 ```
 
-The transpiler emits `string label4 =` followed by the same raw literal,
-adding only the terminating C# semicolon. Literal contents, whitespace and
+The compiler preserves the same raw literal. Literal contents, whitespace and
 delimiter length are preserved; code-looking text inside is not transformed.
-C# raw-string indentation rules apply: the closing delimiter determines the
+Raw-string indentation rules apply: the closing delimiter determines the
 common indentation removed from the runtime value. Use four or more quotes
 as delimiters when the text itself contains triple quotes.
 
 #### String interpolation
 
 `${expression}` is Kobo's default interpolation syntax in ordinary quoted,
-verbatim, and raw strings. The compiler emits standard C# interpolation:
+verbatim, and raw strings. The compiler evaluates Kobo interpolation:
 
 ```kobo
 var:string greeting = "hello ${first_name} ${last_name}"
-// C#: $"hello {first_name} {last_name}"
 ```
 
-Placeholder contents follow C# interpolation syntax:
+Placeholder contents follow Kobo interpolation syntax:
 `${expression[,alignment][:formatString]}`. Expressions support the same
-operations as C#, including arithmetic, member/indexer access, calls, casts,
+operations used elsewhere in Kobo, including arithmetic, member/indexer
+access, calls, casts,
 object creation, nested strings, and `await` in an asynchronous context.
-Alignment and format strings are passed through to C#:
+Alignment and format strings use .NET formatting rules:
 
 ```kobo
 var:string total = "Total: ${price * quantity,12:F2}"
@@ -1288,15 +1338,15 @@ var:string label = "${name,-20}"                    // left-aligned
 var:string choice = "${(count > 0 ? count : 0):D3}"
 ```
 
-As in C#, parenthesize conditional expressions when combining them with
+Parenthesize conditional expressions when combining them with
 alignment or formatting; unformatted `${flag ? "yes" : "no"}` also remains
-supported. C# type, scope, alignment-constant and format rules apply.
+supported. Normal Kobo type and scope rules apply; alignment must be a
+constant integer, and format strings use .NET formatting rules.
 Literal braces are preserved. Write `\${name}` to include the
-literal text `${name}`. `@{name}` has no special meaning. C# interpolation
+literal text `${name}`. `@{name}` has no special meaning. Other interpolation
 prefixes (`$"..."`, `$@"..."`, `@$"..."`, and interpolated raw strings)
 are errors, including inside Kobo placeholders. Only Kobo `${...}`
-interpolation is allowed in source; the transpiler still emits C# interpolated
-strings internally.
+interpolation is allowed in source.
 
 #### Native AI prompts
 
@@ -1325,8 +1375,10 @@ else if population is string text
 
 The effective type is Kobo's existing `union(Type,string)`. A `string` prompt
 remains a plain string. Primitive, custom object, and collection results use
-JSON deserialization. A response that cannot be converted to the requested
-type retains its original text in the string alternative. Authentication,
+JSON deserialization. For providers requiring object-shaped response schemas,
+primitive and collection results are requested inside a JSON `value` property
+and unwrapped before returning the typed Kobo value. A response that cannot be
+converted to the requested type retains its original text in the string alternative. Authentication,
 network, configuration, cancellation, timeout, and tool failures propagate as
 exceptions rather than becoming successful string results.
 
@@ -1338,7 +1390,8 @@ is literal. Common leading indentation and surrounding blank lines are removed.
 unions and add a string alternative only when absent. Their JSON alternatives
 are tried in declaration order, preserving the requested union's nesting.
 
-Place exactly `kobo.ai.json` next to the source application or in the C# project:
+Place exactly `kobo.ai.json` next to the source application or in the
+containing .NET project:
 
 ```json
 {
@@ -1409,7 +1462,7 @@ The separate `Kobo.AI` runtime uses `Microsoft.Extensions.AI`, reuses one lazily
 initialized client per application context, and isolates concurrent prompt
 state. Requests have cancellation, timeout, and tool-count limits. Unknown
 tools, invalid arguments, failed tools, denied approvals, and recursive AI calls
-from tools fail explicitly. Hosted C# applications can create a
+from tools fail explicitly. Hosted applications can create a
 `KoboAIContext`, set `ToolApproval`, and enter its `EnterScope()` to provide a
 policy or injected `IChatClient`; asynchronous disposal is supported. Such
 hosts can pass cancellation tokens through the runtime API.
@@ -1478,45 +1531,21 @@ assembly to be produced in the selected output directory.
 
 ## Editor and project integration
 
-### Embedding Kobo in an existing C# project
+### Kobo files in a .NET project
 
-BuildTools lets you add `.kobo` files directly to an existing SDK-style C#
-project. You do not need to replace the project, move its existing code, or
-create a separate Kobo library. Keep your current application structure and
-introduce Kobo where its declaration syntax, type extensions, or query syntax
-make a particular component easier to express.
+BuildTools discovers `.kobo` files in an SDK-style .NET project and includes
+their public declarations in its assembly. A project can contain multiple
+Kobo modules, use referenced .NET libraries, and configure its dependencies,
+build properties, and SDK in the project. BuildTools discovers nested Kobo
+files automatically and excludes build-output directories.
 
-This supports gradual adoption rather than an all-or-nothing migration. For
-example, an application can keep its startup code, framework configuration, and
-existing services in C#, while implementing a new model or utility in Kobo.
-Teams can evaluate Kobo on a small, isolated part of an application without
-first porting the rest of the codebase. Existing package references and project
-build settings remain the place to configure the application's dependencies.
+Modules determine the namespace of Kobo declarations; directory names do
+not. Imports remain local to each file. Kobo files in the same module share
+global functions and union definitions. The project's final compilation
+resolves accessible cross-file types; explicit annotations clarify public
+contracts and help editor analysis.
 
-The important distinction is that the Kobo files are **part of the same
-compilation**, not a separately built component. BuildTools transforms them
-during the normal project build and contributes their generated declarations
-to the project's compiler. C# code can construct Kobo-defined classes and call
-their members directly. Kobo declarations can also refer to accessible types
-defined elsewhere in the project; the final project compilation checks these
-cross-file references. This does not make every inference step project-wide:
-explicit types remain useful at language boundaries.
-
-Because both sets of source files produce one project assembly, there is no
-separate Kobo DLL to copy, no manual transpilation step to keep in sync, and no
-extra build command to insert before `dotnet build`. The same workflow can run
-locally and in continuous integration. Kobo files in the same namespace also
-share generated global-function containers and union definitions.
-
-### Example: call a Kobo class from C#
-
-Start in the directory of an existing C# console project and install BuildTools:
-
-```sh
-dotnet add package thinkmine.kobo.lang.buildtools --prerelease
-```
-
-Add a file named `Greeting.kobo` alongside the project's existing source files:
+For example, `Greeting.kobo` defines a reusable Kobo class:
 
 ```kobo
 module Example/Greetings
@@ -1525,66 +1554,30 @@ module Example/Greetings
 {
     [public] function:string For(string name)
     {
-        return $"Hello, {name}, from Kobo!"
+        return "Hello, ${name}, from Kobo!"
     }
 }
 ```
 
-Use the class from the project's `Program.cs`:
-
-```csharp
-using Example.Greetings;
-
-var greeting = new Greeting();
-Console.WriteLine(greeting.For("Ada"));
-```
-
-Build and run the existing project normally:
-
-```sh
-dotnet build
-dotnet run --no-build
-```
-
-Output:
-
-```text
-Hello, Ada, from Kobo!
-```
-
-The project might now contain:
-
-```text
-ExistingApp/
-  ExistingApp.csproj
-  Program.cs
-  Greeting.kobo
-```
-
-No separate `kobo build` is needed. Installing the package registers recursive
-Kobo file discovery automatically; subfolders do not require additional project
-entries. Discovery excludes `bin`, `obj`, and configured build output paths,
-and avoids duplicating existing additional-file entries. Namespace membership
-still comes from each Kobo file's `module`, not its folder.
+Other Kobo files can import `Example/Greetings` and use the public class.
+When using BuildTools, no separate Kobo assembly is needed for each file.
 
 ### Project settings and editor support
 
-For embedded Kobo files, configure package dependencies, assembly references,
-SDK selection, and build properties in the existing project. Standalone build
-directives such as `#:package` are not accepted in generator inputs; `#:script`
-can still mark one Kobo file for native top-level semantics.
-BuildTools is a build-time tool and does not require deploying the standalone
-Kobo command-line compiler with the application.
-
-The Kobo VS Code extension supplies highlighting and transformation diagnostics
-when editing `.kobo` files. The C# language service supplies completion and type
-checking for references to generated types when its compiler host can load and
-run BuildTools. Installing the editor extension alone does not enable project
-compilation; the project needs the BuildTools package.
+For project-owned Kobo files, configure package dependencies, assembly
+references, SDK selection, and build properties in the containing project.
+Standalone app directives such as `#:package` are not accepted in these
+files; `#:script` can mark one file for top-level statements. The Kobo VS
+Code extension provides highlighting, diagnostics, and completion for Kobo
+declarations, available .NET members, and symbols in other workspace `.kobo`
+files, including unsaved open documents. Within prompt bodies, only
+`${expression}` receives expression completion; surrounding text remains plain.
+The language server does not load the consuming project's dependency graph,
+so project-specific references are checked by the project compilation.
 
 This preview requires a .NET 11 compiler host with Roslyn 5.9 or newer, including
 the editor's compiler host. Selecting a project target framework does not itself
-upgrade that host. If command-line builds succeed but the editor cannot resolve
+upgrade that host. If a project build succeeds but the editor cannot resolve
 Kobo-defined types, check the editor's generator-loading diagnostics and host
 compatibility, and reload the project after package changes.
 

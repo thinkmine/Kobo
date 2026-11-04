@@ -1,19 +1,10 @@
-<img src="kobo-emerald.png" alt="Kobo logo" width="48" height="48" />
-
 # Get Started with Kobo
 
-Kobo is an AI-conscious, general-purpose language for building .NET software.
-Designed for both human developers and AI code generation, it pairs consistent
-declarations and expressive constructs with streamlined syntax. These choices
-aim to make code easier to generate, understand, validate, and maintain while
-drawing on the maturity and performance of the .NET platform.
+## Language version 0.1.25
 
-**Version:** `0.1.8-preview`
-
-Use Kobo to build standalone .NET programs, add Kobo source files to an existing
-C# project, or keep a small utility and its build settings in one file. This
-guide walks through each approach. Learn more about [why Kobo](WHY-KOBO.md) or
-explore the [language guide](KOBO-LANGUAGE.md).
+Kobo lets you build standalone .NET programs, add Kobo source files to an
+existing .NET project, or keep a small utility and its settings in one file.
+This guide walks through each approach.
 
 ## 1. Prepare your environment
 
@@ -41,7 +32,7 @@ highlighting and language-server support. If installing a locally packaged
 extension, open the Command Palette, choose **Extensions: Install from VSIX...**,
 and select the Kobo VSIX.
 
-For the mixed C#/Kobo example, also install Microsoft's C# language support.
+For project-based Kobo code, use the Kobo editor extension.
 The editor's compiler host must support .NET 11 and Roslyn 5.9 or newer to load
 the current BuildTools generator. An SDK-compatible command-line build does
 not automatically guarantee an editor-compatible compiler host.
@@ -77,7 +68,7 @@ cd KoboHello
 Create `hello.kobo` with this content:
 
 ```kobo
-import System
+import * from System
 
 module Examples/Hello
 
@@ -92,7 +83,7 @@ module Examples/Hello
 
 Here is what the program declares:
 
-- `import System` makes standard console APIs available.
+- `import * from System` makes standard console APIs available.
 - `module Examples/Hello` places the program in a namespace. Forward slashes
   express its hierarchy as a readable path.
 - `class:Program` declares a class; `[public]` supplies its accessibility.
@@ -138,26 +129,11 @@ Files sharing a module share its namespace and generated globals and unions.
 Folder names do not assign modules automatically. When supplying both output
 options, put `--output-directory` before `--name`.
 
-## 3. Add Kobo to an existing C# console application
+## 3. Add Kobo to a .NET project
 
-Use **BuildTools** when you want Kobo and C# files in the same project.
-Your existing application remains the host: its project controls dependencies,
-configuration, and the output assembly. A separate Kobo build is unnecessary.
-
-This is useful for introducing Kobo gradually. Keep your current startup code
-and services, add a Kobo component, and call it directly from existing code.
-The component participates in the same compilation instead of becoming a
-separately managed library.
-
-### Open the console project
-
-Change into the directory containing its `.csproj` file. If you do not already
-have a console project, create one to try the example:
-
-```sh
-dotnet new console --name MixedApp --framework net11.0
-cd MixedApp
-```
+Use **BuildTools** when Kobo files belong to a project that owns dependencies
+and configuration. Multiple Kobo files can share accessible declarations
+without producing separate assemblies for each file.
 
 ### Install BuildTools
 
@@ -165,9 +141,8 @@ cd MixedApp
 dotnet add package thinkmine.kobo.lang.buildtools --prerelease
 ```
 
-The package automatically registers Kobo files as compiler inputs. You do not
-need the standalone `kobo` tool for this workflow or manual `.csproj` edits to
-include each Kobo file.
+The package discovers Kobo files recursively. Standalone app directives do
+not belong in project-owned source files.
 
 ### Add a Kobo class
 
@@ -180,48 +155,30 @@ module Example/Greetings
 {
     [public] function:string For(string name)
     {
-        return $"Hello, {name}, from Kobo!"
+        return "Hello, ${name}, from Kobo!"
     }
 }
 ```
 
-### Call it from C#
+### Use the class from Kobo
 
-In a new console project, replace `Program.cs` with the following. In an
-existing application, incorporate the same call into your normal startup code:
+Another Kobo file can import the module and use the public type:
 
-```csharp
-using Example.Greetings;
+```kobo
+import * from Example/Greetings
 
-var greeting = new Greeting();
-Console.WriteLine(greeting.For("Ada"));
+[public] class:Program
+{
+    [public, static] function:void Main(string[] args)
+    {
+        var greeting = new Greeting()
+        Print(greeting.For("Ada"))
+    }
+}
 ```
 
-The relevant project files are now:
-
-```text
-MixedApp/
-  MixedApp.csproj
-  Program.cs
-  Greeting.kobo
-```
-
-### Build and run the project
-
-```sh
-dotnet build
-dotnet run --no-build
-```
-
-Expected output:
-
-```text
-Hello, Ada, from Kobo!
-```
-
-Use `dotnet build`, not a separate `kobo build`, for this workflow. BuildTools
-discovers Kobo files recursively, excludes build output directories, and
-includes them in the project build.
+The application prints `Hello, Ada, from Kobo!`. BuildTools excludes output
+directories and resolves accessible types across the project's Kobo files.
 
 Configure NuGet dependencies, local DLL references, SDK selection, and build
 properties in the project. Do not put single-file app directives in embedded
@@ -242,15 +199,15 @@ folder and save this as `greet.kobo`:
 #:sdk Microsoft.NET.Sdk
 #:property Nullable=enable
 
-import System
+import * from System
 
 [public] class:Program
 {
     [public, static] function:void Main(string[] args)
     {
         var name = args.Length > 0 ? args[0] : "world"
-        Console.WriteLine($"Hello, {name}!")
-        Console.WriteLine($"Today is {DateTime.Now:yyyy-MM-dd}.")
+        Print("Hello, ${name}!")
+        Print("Today is ${DateTime.Now:yyyy-MM-dd}.")
     }
 }
 ```
@@ -277,7 +234,7 @@ For a NuGet library, add a package directive at the top of the file:
 Add its namespace with the other imports:
 
 ```kobo
-import Newtonsoft/Json
+import * from Newtonsoft/Json
 ```
 
 You can then use its APIs inside `Main`:
@@ -314,11 +271,16 @@ does not add an assembly reference.
 | Build a standalone Kobo program | `kobo build file.kobo` |
 | Compile a folder of Kobo files together | `kobo build ./src` |
 | Include nested source folders | `kobo build ./src --recursive` |
-| Mix Kobo and C# in an existing project | Install BuildTools and use `dotnet build` |
+| Use Kobo files in a .NET project | Install BuildTools and use the project's normal workflow |
 | Keep a utility and dependencies in one file | Use app directives and the single-file build/run workflow |
 
 Continue with [The Kobo Programming Language](KOBO-LANGUAGE.md) for variables,
-control flow, type extensions, classes, inheritance, lambdas, and queries.
+control flow, type extensions, classes, inheritance, lambdas, queries, native
+JSON, and typed AI prompts. For hands-on examples, see the
+[console tutorial](KoboLang.TestHarness/input/tutorials/1.variables.kobo),
+[string tutorial](KoboLang.TestHarness/input/tutorials/2.strings.kobo), and
+[AI tutorial](KoboLang.TestHarness/input/tutorials/11.ai.kobo). The AI tutorial
+uses an adjacent `kobo.ai.json` with an environment-supplied API key.
 See the [compiler guide](Kobo.Lang.Compiler/README.md) for installation and
 command-line details, or the [VS Code guide](Kobo.Lang.VSCode/README.md) for
 editor setup.

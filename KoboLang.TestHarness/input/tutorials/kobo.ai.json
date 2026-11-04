@@ -1,0 +1,10 @@
+{
+  "provider": "OpenAI",
+  "model": "gpt-4o-mini",
+  "key": "${OPENAI_API_KEY}",
+  "options": {
+    "maxOutputTokens": 1000,
+    "timeoutSeconds": 120,
+    "maxToolCalls": 10
+  }
+}

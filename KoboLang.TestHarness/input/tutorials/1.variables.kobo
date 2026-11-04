@@ -1,0 +1,76 @@
+#:script
+
+//uncomment this to see the error
+//var:bool b = false
+
+//boolean
+var:bool var1 = true
+
+//integer
+var:byte var2 = 30
+var:sbyte var3 = 30
+var:short var4 = 30
+var:ushort var5 = 30
+var:int var6 = 30
+var:uint var7 = 30
+var:long var8 = 30
+var:ulong var9 = 30
+var:nint var10 = 30
+var:nuint var11 = 30
+
+//floating point
+var:float var12 = 30.0f 
+var:double var13 = 30.0
+var:decimal var14 = 30.0M
+
+//string
+var:char var15 = '3'
+var:string var16 = "30"
+
+//object
+var:object var17 = 10
+var:dynamic var18 = "something"
+
+//constants
+const:int CONSTANT = 100
+
+var var19 = 10
+
+//arrays
+var:string[] planets_array = ["my","very","educated","mother","just","served","us","nine","pickles"]
+
+//list of strings
+var planets_list = ["my","very","educated","mother","just","served","us","nine","pickles"]
+var:list<int> list_of_numbers = [1,2,3,4,5,6,7,8]
+
+
+
+//dictionary literals
+var:dictionary<string,int> ages = 
+{
+    "joe":5,
+    "smith":9
+}
+
+//type inference in dictionary literals
+var ages_2 = 
+{
+    "david":5,
+    "john":9,
+
+}
+
+
+//writing to the console
+Print("This is writing to the console")
+
+//reading values from the console
+var:string input = Input()
+Print(input)
+
+//prompting the user as part of reading values from the console
+var:string input2 = Input("enter some text: ")
+Print(input2)
+
+Print("Sample complete!")
+

@@ -1,0 +1,43 @@
+#:script
+
+var:int left = 203
+var:int right = 22
+
+[tool, description("Adds two integers")]
+function:int Add(int first, int second) => first + second
+
+prompt:int result {
+    Use the Add tool to calculate ${left} plus ${right}.
+    Return only the resulting number.
+}
+
+if result is int number
+{
+    Console.WriteLine("The answer is ${number}")
+}
+else if result is string text
+{
+    Console.WriteLine("The response could not be converted: ${text}")
+}
+
+prompt:json message_result {
+    Create an email message with an appropriate subject for a marketing
+    campaign about seeing a movie. Use the following JSON format:
+
+    {
+        "subject": "the subject of the message",
+        "message": "the message itself",
+        "movie": "a modern movie"
+    }
+
+}
+
+if message_result is json message
+{
+    var:string message_as_string = message.StringValue
+    Print(message_as_string)
+}
+else if message_result is string response
+{
+    Print("The response could not be converted: ${response}")
+}

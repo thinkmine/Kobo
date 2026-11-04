@@ -1,0 +1,69 @@
+#:script
+
+
+
+
+
+
+//lambdas
+var:()->void var18 = null
+var:()->int var19 = null
+var:(int)->int var20 = null
+
+//type inference for lambda function
+var lamdba1 = () =>
+{
+    return 77
+}
+
+//type inference void lambda function
+var lambda_2 = ()=>
+{
+    Console.WriteLine("void lambda 2")
+}
+
+//explicit declaration of a lambda function
+//a void lambda cannot return a value - uncomment this to see the error
+var:(string)->void lambda_3 = (x) =>
+{
+    Console.WriteLine("void lambda 2")
+}
+
+
+var:(string)->int lambda_4 = (x) =>
+{
+    return 77
+}
+
+
+//Native json
+var:json information = {
+    "type": "music",
+    "data":[
+        "one",
+        "two",
+        "three",
+    ],
+    "contact":{
+        "address":"1234 street",
+        "phone": "3334445555"
+    }
+}
+
+//json properties read with natural syntax
+Console.WriteLine(information.type)
+Console.WriteLine(information.data[1])
+Console.WriteLine(information.contact.address)
+
+//and updated the same way
+information.type = "rock"
+information.contact.address = "99 avenue"
+
+//StringValue returns JSON text; assignment parses JSON text implicitly
+var:string json_text = information.StringValue
+var:json reloaded = json_text
+Console.WriteLine(reloaded.contact.address)
+
+
+
+Console.WriteLine("Sample Complete")

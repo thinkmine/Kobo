@@ -1,8 +1,10 @@
 # Kobo.Lang.BuildTools
 
+## Language version 0.1.25
+
 **NuGet package:** `thinkmine.kobo.lang.buildtools`
 
-Install the analyzer package in an SDK-style C# project:
+Use the analyzer package in an SDK-style .NET project:
 
 ```sh
 dotnet add package thinkmine.kobo.lang.buildtools --prerelease
@@ -29,10 +31,10 @@ module Example;
 }
 ```
 
-The same project's C# code can use `new Example.Person()` immediately. No
+Other Kobo files in the project can import `Example` and use `Person`. No
 separate Kobo compilation step is needed. Kobo source follows the language's
-established syntax, inference rules, and per-file semantics. C# type checking
-and cross-file type references are resolved in the consuming compilation.
+syntax, inference rules, and per-file semantics. Cross-file type references
+are resolved in the consuming project compilation.
 
 Single-file app directives (`#:sdk`, `#:property`, and `#:package`) are for
 standalone CLI apps, not generator inputs. Configure these settings in the
@@ -41,11 +43,11 @@ in a Kobo input.
 
 Imports use the same unified syntax as the CLI: `import * from System`,
 `import HttpClient as Client from System/Net/Http`, and compound forms such as
-`import { static Math, Console } from System`. All `import` declarations emit
-file-level C# directives without replacing references. Namespace aliases use
+`import { static Math, Console } from System`. Imports bring names into scope
+without replacing references. Namespace aliases use
 `import * as Sys from System`. For lexical fully qualified type substitution,
 use `using HttpClient as Client from System/Net/Http` or compound `using` lists.
-This also supports open generic definitions, unlike C# import aliases.
+This also supports open generic definitions, unlike named import aliases.
 Replacements are resolved independently before combining generated globals and
 unions; conflicting import directives in shared declarations are errors.
 Group wildcard namespaces with `import * from { System/Net, System/Linq }`;
@@ -77,8 +79,8 @@ Diagnostics:
 | KOBO0004 | Warning | Semantic inference failed and the compiler used its existing simpler inference fallback |
 
 Kobo diagnostics identify the original file and its one-based compiler line and
-column (clamped to the available source). C# compiler diagnostics retain their
-normal codes and point to the relevant project compilation locations. Full Kobo
+column (clamped to the available source). Project compiler diagnostics retain
+their normal codes and point to the relevant compilation locations. Full Kobo
 source-level debugging is not implemented, so compiler locations may differ
 from the corresponding Kobo declarations.
 
@@ -101,7 +103,7 @@ declarations are reported as Kobo errors.
 
 Ordinary files are analyzed independently and cached by path/content and metadata
 references. Unchanged ordinary files are not reanalyzed when other Kobo files or
-ordinary C# source change. AI files additionally use companion Kobo/C# sources
+other project source changes. AI files additionally use companion project sources
 for prompt result types and tool signatures, so those changes invalidate AI
 analysis. Cancellation is propagated through file reads, compiler
 phases, semantic-model construction, and source emission.
@@ -115,11 +117,14 @@ do not execute prompts do not initialize AI clients or read AI configuration.
 ## Native AI
 
 `prompt:Type name { ... }` and `[tool]` use the same compiler/runtime as the CLI.
+The body stays plain text except for `${expression}`. `json.StringValue`,
+implicit `json`/`string` conversions, `Print(...)`, and `Input()`/`Input("prompt")`
+also work in Kobo files added to a project.
 Keep `kobo.ai.json` in the consuming project; package targets copy it to build
 and publish outputs and keep it external to single-file bundles. Environment
 variables in configuration are substituted only at runtime. Prompts require
 an async function or a native `#:script` top-level program. Only one application
-file may supply top-level statements, as required by C#.
+file may supply top-level statements in a project.
 
 Use `<LangVersion>preview</LangVersion>` for generated native union types.
 See [native AI and interpolation](../KOBO-LANGUAGE.md#native-ai-prompts) for
@@ -127,8 +132,8 @@ providers, configuration, tool eligibility, error behavior, and hosting APIs.
 
 ## BuildTools versus the command-line compiler
 
-With this package installed, use normal `dotnet build` operations in the
-consuming C# project. Kobo files are discovered recursively automatically; no
+With this package installed, use normal project workflows in the
+consuming .NET project. Kobo files are discovered recursively automatically; no
 `kobo build` command or `--recursive` option is needed.
 
 For standalone Kobo assemblies, the separate CLI supports `kobo build` for the
