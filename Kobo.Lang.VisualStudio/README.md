@@ -1,6 +1,6 @@
 # Kobo Language Support for Visual Studio
 
-## Extension version 0.1.26 (Kobo language 0.1.25)
+## Extension version 0.1.29 (Kobo language 0.1.29)
 
 This VSIX adds `.kobo` editing support to Visual Studio 2022 (17.14 or later)
 and Visual Studio 2026 (Community, Professional, and Enterprise). It shares the
@@ -9,6 +9,9 @@ grammar with the VS Code extension. It provides syntax highlighting, completion,
 hover information, go to definition, and diagnostics. Prompt bodies remain plain
 text except for `${...}` Kobo expressions. The editor uses the shared grammar for
 coloring; Visual Studio may not apply every semantic token provided by the server.
+Inferred fields have fixed compile-time types. The server provides completion and
+diagnostics for types it can resolve from the current file and runtime references;
+full project and cross-file inference is resolved by the build.
 
 The extension does not compile Kobo itself. Kobo compilation in projects is
 provided by the separate `thinkmine.kobo.lang.buildtools` NuGet package.
@@ -16,7 +19,7 @@ provided by the separate `thinkmine.kobo.lang.buildtools` NuGet package.
 ## Project integration and templates
 
 When a `.kobo` file is added to an SDK-style C# project in a solution, the
-extension offers to install BuildTools 0.1.26 if it is not already installed.
+extension offers to install BuildTools 0.1.29 if it is not already installed.
 The prompt appears at most once per project per Visual Studio session; declining
 leaves the project unchanged. Installation uses the project's configured
 NuGet sources and reports failures in a dialog and the Visual Studio Activity
@@ -26,10 +29,10 @@ Standalone files, non-C# projects, and legacy C# project files are unaffected.
 The **Kobo Console Application** template creates a Kobo-only `net11.0`
 console project with a Kobo `Main` method. The **Kobo Enabled Console
 Application** template creates a C# `net11.0` console project with a Kobo
-source file compiled alongside it. Both templates reference BuildTools 0.1.26.
+source file compiled alongside it. Both templates reference BuildTools 0.1.29.
 Project builds require a .NET 11 compiler host with Roslyn 5.9 or later;
 older .NET Framework-based Visual Studio analyzer hosts cannot run the generator.
-The BuildTools package also requires `thinkmine.kobo.ai` 0.1.26 to be
+The BuildTools package also requires `thinkmine.kobo.ai` 0.1.29 to be
 available on a configured NuGet source.
 
 ## Requirements

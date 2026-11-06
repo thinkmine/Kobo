@@ -1,6 +1,6 @@
 # Kobo.Lang.BuildTools
 
-## Language version 0.1.25
+## Language version 0.1.29
 
 **NuGet package:** `thinkmine.kobo.lang.buildtools`
 
@@ -101,11 +101,13 @@ duplicate names and overloads are reported as Kobo errors. Type-member overloads
 remain allowed. Conflicting import aliases in shared
 declarations are reported as Kobo errors.
 
-Ordinary files are analyzed independently and cached by path/content and metadata
-references. Unchanged ordinary files are not reanalyzed when other Kobo files or
-other project source changes. AI files additionally use companion project sources
-for prompt result types and tool signatures, so those changes invalidate AI
-analysis. Cancellation is propagated through file reads, compiler
+Ordinary files without inferred fields are analyzed independently and cached by
+path/content and metadata references. Files with inferred fields, like AI files,
+also use companion Kobo and project sources to resolve types, so changes to that
+context invalidate their analysis. An inferred field has a fixed compile-time
+type; use `var:Type` when the initializer cannot determine one, or `var:dynamic`
+for intentional dynamic binding. Previous untyped fields used dynamic binding
+and may need to be updated. Cancellation is propagated through file reads, compiler
 phases, semantic-model construction, and source emission.
 
 The analyzer embeds the existing compiler sources at build time; its only

@@ -1,6 +1,6 @@
 # Kobo command-line compiler
 
-## Language version 0.1.25
+## Language version 0.1.29
 
 **NuGet package:** `thinkmine.kobo.lang`
 
@@ -162,7 +162,7 @@ From a source checkout, run the unified file/folder build regression checks with
 
 For a complete Kobo-first introduction, see
 [The Kobo Programming Language](https://github.com/thinkmine/KoboLang/blob/master/KOBO-LANGUAGE.md).
-Version 0.1.25 supports `Print(...)` and `Input()`/`Input("prompt")`, native
+Version 0.1.29 supports `Print(...)` and `Input()`/`Input("prompt")`, native
 `json` values with `StringValue` and implicit string conversion, and
 `prompt:Type` declarations with `${expression}` interpolation and `[tool]`
 functions. Prompt text outside interpolations is literal, even when it contains
@@ -172,7 +172,7 @@ Standalone single-file builds accept `#:sdk`, `#:property`, and `#:package`;
 these are passed to the SDK build. Other app directives, including `#:project`,
 are rejected. Multi-file builds do not accept app directives.
 
-Kobo reuses familiar .NET types, expressions, method calls, and brace-delimited blocks while providing its own declaration syntax. Explicit types are useful at API boundaries; local variables can use inference.
+Kobo reuses familiar .NET types, expressions, method calls, and brace-delimited blocks while providing its own declaration syntax. Explicit types are useful at API boundaries; local variables and fields can use inference.
 
 ### Multiline LINQ queries
 
@@ -342,16 +342,21 @@ var:dictionary<string, int> ages =
 var inferredAges = { "joe": 5, "smith": 9 }
 ```
 
-Use `var:Type` for explicit typing and `var` for inferred local values. Untyped
-`var` fields outside functions are dynamic; prefer explicit field types when
-you want compile-time checking. Constants must be compile-time expressions.
+Use `var:Type` for explicit typing and `var` to infer local variables and
+class, struct, or record fields from their initializers. An inferred field has
+a fixed compile-time type, is private by default, and supports normal access,
+`static`, and `readonly` modifiers. Use explicit types for null, empty,
+target-typed, unresolved, or circular initializers, and `var:dynamic` when
+dynamic binding is intentional. Untyped fields previously used dynamic binding;
+change those declarations to `var:dynamic` if they depend on that behavior.
+Constants must be compile-time expressions.
 
 Collection literals use square brackets. Kobo can infer collection element types in supported cases, but explicit types make the intended collection shape clearer.
 Import `System/Collections/Generic` for collection types. Lowercase `list<T>` and
 `dictionary<K, V>` map to `List<T>` and `Dictionary<K, V>`, including in nested
 generics. Dictionary entries use `key: value` inside braces and generate indexed
-initializers. For untyped local dictionaries, key and value types are inferred
-from literals and in-scope variables; mixed types become `object`. An empty
+initializers. For untyped dictionaries, key and value types are inferred
+from their entries; mixed types become `object`. An empty
 dictionary or an entry whose type cannot be inferred needs `var:dictionary<K, V>`.
 
 ### Properties and indexers

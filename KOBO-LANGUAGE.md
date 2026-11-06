@@ -1,8 +1,8 @@
 # The Kobo Programming Language
 
-## Language version 0.1.25
+## Language version 0.1.29
 
-This specification describes Kobo source as accepted by the version 0.1.25
+This specification describes Kobo source as accepted by the version 0.1.29
 compiler and runtime. Examples are Kobo unless marked as configuration or
 console output. Language syntax, type rules, runtime behavior, errors, and
 tooling limits are described separately; examples do not grant forms that
@@ -239,8 +239,35 @@ Cross-file and project references are resolved by the full build.
 Constants require
 constant expressions and cannot subsequently be assigned.
 
-Use explicit types for fields when compile-time checking is desired: inferred
-fields use dynamic binding.
+Fields in a class, struct, or record can also use `var` to infer their type
+from the initializer:
+
+```kobo
+class:Counter
+{
+    var count = 0                          // private int field
+    [public] var Name = "Kobo"             // string field
+    [public, static, readonly] var Limit = 10
+    var:dynamic flexible = 0
+}
+```
+
+An inferred field has a fixed compile-time type; subsequent assignments must
+be compatible with it. Fields are private by default, and access, `static`, and
+`readonly` modifiers apply normally. Instance initializers run for each
+instance; static initializers run for the type. A field initializer cannot
+directly reference an instance field, method, or property; initialize
+dependent instance values in a constructor instead. Declare each inferred
+field separately.
+
+Use an explicit `var:Type` when the initializer cannot determine a usable type,
+such as `null`, an empty collection, `new()`, a target-typed expression, an
+unresolved name, or a circular dependency between inferred fields. A
+top-level dynamic initializer also needs an explicit type. Use `var:dynamic`
+when dynamic binding is intentional, or an explicit base, interface, nullable,
+or collection type when that is the intended contract. Previous releases used
+dynamic binding for untyped fields; migrate fields that depend on that behavior
+to `var:dynamic`.
 
 Use `readonly:Type Name = value` for an initialized, read-only field:
 
@@ -287,9 +314,9 @@ Import `System/Collections/Generic` for `List<T>` and `Dictionary<K, V>`.
 Lowercase `list<T>` and `dictionary<K, V>` map to those .NET types, including
 inside nested generic types. List expressions use square brackets. Dictionary
 initializers use `{ key: value }` and become `new Dictionary<K, V> { [key] = value }`.
-For an untyped local `var`, Kobo infers the key and value types from literals
-and in-scope variables; differing types become `object`. Empty dictionaries
-or entries with unknown types require an explicit `var:dictionary<K, V>`.
+For an untyped `var`, Kobo infers dictionary key and value types from their
+entries; differing types become `object`. Empty dictionaries or entries with
+unknown types require an explicit `var:dictionary<K, V>`.
 
 ### The json type
 
@@ -297,7 +324,8 @@ or entries with unknown types require an explicit `var:dictionary<K, V>`.
 declaration can be initialized directly from a JSON object literal:
 
 ```kobo
-var:json information = {
+var:json information =
+{
     "type": "music",
     "data":[
         "one",
@@ -311,7 +339,23 @@ var:json information = {
 }
 ```
 
-The literal must be valid JSON (trailing commas and comments are allowed).
+The opening `{` may also appear on the same line as `=`.
+
+The literal must be valid JSON (trailing commas and comments are allowed),
+except that values can be Kobo expressions evaluated when the declaration runs.
+Quoted keys and values support `${expression}` interpolation. Expression results are
+serialized as JSON values (not inserted as raw JSON text); strings are escaped
+and numbers, booleans, null, arrays, and `json` values retain their JSON types.
+
+```kobo
+var n = 9
+var:json details = {
+    "type": n,
+    "next": n + 1,
+    "message": "Number ${n}",
+    "items": [n, n * 2]
+}
+```
 Properties are read and updated with natural member syntax:
 
 ```kobo

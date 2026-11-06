@@ -1,6 +1,6 @@
 # Writing applications in Kobo with AI
 
-## Language version 0.1.25
+## Language version 0.1.29
 
 Use this guide as context for ChatGPT, Codex, Claude, and other coding agents
 asked to create or modify Kobo programs. The authoritative syntax reference is
@@ -44,8 +44,8 @@ or claim that an unverified feature works.
 | Module | `module Acme/Orders` |
 | Type and inheritance | `[public] class:Order is IOrder` |
 | Function and parameter | `[public] function:int Count(string filter)` |
-| Member or field | `[public] property:string Name { get; set; }`; `readonly:int limit = 10` |
-| Typed/inferred local | `var:int count = 0`; `var name = "Kobo"` |
+| Member or field | `[public] property:string Name { get; set; }`; `readonly:int limit = 10`; `[public] var Count = 0` |
+| Typed/inferred variable | `var:int count = 0`; `var name = "Kobo"` |
 | Constructor | `[public] new(string name) { Name = name }` inside a type |
 | Interpolation | `"Hello, ${name}!"` |
 | Console | `Print(value)`; `Input()`; `Input("Name: ")` |
@@ -127,6 +127,10 @@ module Example/Inventory
 
 Collections support arrays, `List<T>`, `Dictionary<K,V>`, lowercase
 `list<T>`/`dictionary<K,V>`, collection expressions, and indexed access.
+Fields can use `var` to infer a fixed compile-time type from their initializer.
+Use `var:Type` for ambiguous, empty, null, or target-typed initializers, and
+`var:dynamic` only when dynamic binding is intended. Explicit types are useful
+for public contracts that should not change when an initializer changes.
 `[public] class:Name`, `struct:Name`, `record:Name`, `interface:Name`,
 `enum:Name`, properties, indexers, constructors, operators, events, generic
 functions, inheritance with `is`, and `extension:Type` blocks are documented
@@ -156,13 +160,15 @@ framework dependencies and entry points. See
 ## JSON, text, and console I/O
 
 `json` supports object literals and nested property/indexer reads and writes.
+Object literals can use Kobo expressions as values and `${expression}` inside
+quoted values; evaluated results are serialized as JSON values.
 Assign JSON text to a `json` variable to parse it; assign a `json` value to a
 `string` variable, or read its `StringValue`, for serialized text. Implicit
 conversions between `json` and `string` are available; converting invalid JSON
 text throws `JsonException`. JSON object properties are dynamic, so check the
 shape before depending on an external response. `StringValue` yields formatted
-JSON; do not assume the original whitespace is retained. Begin a multiline
-JSON object literal with `= {` on the declaration line.
+JSON; do not assume the original whitespace is retained. The opening `{` of
+a multiline JSON object literal can follow `=` on the same line or the next line.
 
 ```kobo
 #:script

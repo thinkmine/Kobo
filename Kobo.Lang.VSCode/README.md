@@ -1,6 +1,6 @@
 # Kobo Language Support
 
-## Language version 0.1.25
+## Language version 0.1.29
 
 Kobo Language Support brings `.kobo` language support to Visual Studio Code. It starts the Kobo language server to provide semantic syntax highlighting and diagnostics for Kobo source files. The language server reports transform errors and unresolved names (including undeclared variables) in the editor. Name analysis uses the current file and available runtime references, not the complete consuming project; the full build resolves cross-file/project references. This extension does not build or run your program.
 
@@ -85,13 +85,13 @@ Some core syntax:
 - **Inheritance:** Use only `is`, as in `class:Child is Base, IContract`. Colon-based base lists and `inherits`, `extends`, or `implements` are rejected.
 - **Functions:** Use `function:<return-type> <name>(<parameters>)`, for example `function:void Print(string message)`. Put modifiers before `function`, such as `[static]`.
 - **Parameters:** Declare parameters as `Type name`, such as `int count`. The `name: Type` form is not supported.
-- **Variables and constants:** Use `var:Type name = value` for an explicitly typed variable, `var name = value` for an inferred variable, and `const:Type name = value` for a constant.
+- **Variables and constants:** Use `var:Type name = value` for an explicitly typed variable, `var name = value` for an inferred local or field, and `const:Type name = value` for a constant. Inferred fields have fixed compile-time types; use `var:dynamic` for intentional dynamic binding or `var:Type` when the initializer cannot determine a type.
 - **Collection types:** Lowercase `list<T>` and `dictionary<K, V>` receive the same type highlighting as `List<T>` and `Dictionary<K, V>`. Dictionary literals use `{ key: value }`.
 - **Properties:** Use `property:Type Name { get; set; }` or an expression-bodied property such as `property:int Doubled => Value * 2`.
 - **Lambdas and delegates:** `x => x + 1` is a lambda. Delegate types can be written as `(int)->int` or `(string)->void`.
 - **Optional semicolons:** Semicolons are generally optional at the end of single-line statements.
 - **Console commands:** `Print(...)` writes a line using supported argument forms; `Input()` reads a line and `Input("Name: ")` writes a prompt first.
-- **JSON:** `json` supports property and indexer access. `StringValue` returns JSON text, and implicit conversions between `json` and `string` parse or serialize it. Invalid JSON text throws `JsonException`.
+- **JSON:** `json` supports property and indexer access. Native JSON objects accept Kobo expressions as values and `${expression}` in quoted keys or values. `StringValue` returns JSON text, and implicit conversions between `json` and `string` parse or serialize it. Invalid JSON text throws `JsonException`.
 - **Prompts and tools:** `prompt:Type name { ... }` requests a typed AI result or its original text. Only `${expression}` is evaluated in the otherwise plain-text prompt body. `[tool]` exposes eligible functions. See the [AI tutorial](https://github.com/thinkmine/KoboLang/blob/master/KoboLang.TestHarness/input/tutorials/11.ai.kobo).
 - **Catch declarations:** Parentheses are optional: `catch Exception error` or
   `catch Exception`. Bare `catch` and parenthesized forms remain supported.
