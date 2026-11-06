@@ -1,6 +1,6 @@
 # Kobo Language Support
 
-## Language version 0.1.29
+## Extension version 0.1.30 (Kobo language 0.1.29)
 
 Kobo Language Support brings `.kobo` language support to Visual Studio Code. It starts the Kobo language server to provide semantic syntax highlighting and diagnostics for Kobo source files. The language server reports transform errors and unresolved names (including undeclared variables) in the editor. Name analysis uses the current file and available runtime references, not the complete consuming project; the full build resolves cross-file/project references. This extension does not build or run your program.
 
@@ -100,7 +100,7 @@ Some core syntax:
 - **Query form:** Only select-first queries are accepted. From-first `from ... in ...` expressions, including nested queries, report a Kobo error.
 - **Select-first LINQ:** `select person from people where person.Age > 30 project person.Name` lowers to standard LINQ. Supports equality joins, `group ... by ... into name`, `orderby ... asc|desc`, and anonymous projections with `project { ... }`. Without `project`, selects the initial identifier or returns groups.
 
-Kobo also supports constructs such as generics, trailing-lambda calls, `scope(expr)` member shorthand, and `extension:Type` blocks. Instance extension members use `this` for their receiver; static extension members cannot use `this`. Extension indexers must be named; `this` indexer declarations are rejected, while `this` remains valid in instance indexer bodies. For a fuller language reference and more examples, see the [KoboLang repository README](https://github.com/thinkmine/KoboLang#language-summary-and-syntax).
+Kobo also supports constructs such as generics, trailing-lambda calls, `scope(expr)` member shorthand, and `extension:Type` blocks. Instance extension members use `this` for their receiver; static extension members cannot use `this`. Extension indexers must be named; `this` indexer declarations are rejected, while `this` remains valid in instance indexer bodies. For a fuller language reference and more examples, see the [Kobo Lang repository README](https://github.com/thinkmine/Kobo#language-summary-and-syntax).
 
 
 
