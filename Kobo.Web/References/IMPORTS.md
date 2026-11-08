@@ -1,6 +1,6 @@
 # Imports and fully qualified type replacement in Kobo
 
-## Language version 0.1.29
+## Language version 0.1.40
 
 Kobo separates two operations:
 
@@ -215,5 +215,5 @@ of Kobo-defined types remain supported.
 ## Related documentation
 
 - [Language reference](/docs/language-reference.md#imports)
-- [Command-line compiler](https://github.com/thinkmine/KoboLang/blob/master/Kobo.Lang.Compiler/README.md)
+- [Command-line compiler](https://github.com/thinkmine/Kobo/blob/master/Kobo.Lang.Compiler/README.md)
 - [BuildTools integration](/docs/buildtools.md)

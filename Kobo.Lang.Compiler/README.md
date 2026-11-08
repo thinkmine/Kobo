@@ -1,6 +1,6 @@
 # Kobo command-line compiler
 
-## Language version 0.1.29
+## Language version 0.1.40
 
 **NuGet package:** `thinkmine.kobo.lang`
 
@@ -34,7 +34,7 @@ dotnet tool install thinkmine.kobo.lang --prerelease
 dotnet tool run kobo build hello.kobo
 ```
 
-Create the tool manifest only if the repository does not already have one. Restore tools in an existing checkout with `dotnet tool restore`. These installation commands require the package to be available from a configured NuGet source; see [Building from source](#building-from-source) for local packages.
+Create the tool manifest only if the repository does not already have one. Restore tools in an existing checkout with `dotnet tool restore`. These installation commands require the package to be available from a configured NuGet source.
 
 ## Write, build, and run a program
 
@@ -107,7 +107,7 @@ Run `kobo --version` by itself to print the compiler's NuGet package version.
 | `--recursive` | Includes subfolders in directory builds. Not valid for a file input. |
 | `--output-directory <directory>` | Writes output to this directory, creating it if needed. Defaults to the input file's directory or the folder being built. |
 | `--name <assembly-name>` | Sets the output assembly name. Defaults to the input filename without its extension, or the folder name. |
-| `--publish-code` | Also saves a compiler source listing for inspection. |
+| `--publish-code` | Also saves a compiler source listing. |
 
 When using both named options, put `--output-directory` before `--name`, as shown above; this matches the current CLI command patterns. The `--publish-code` flag can accompany any build command.
 
@@ -161,12 +161,19 @@ From a source checkout, run the unified file/folder build regression checks with
 ## Language guide
 
 For a complete Kobo-first introduction, see
-[The Kobo Programming Language](https://github.com/thinkmine/KoboLang/blob/master/KOBO-LANGUAGE.md).
-Version 0.1.29 supports `Print(...)` and `Input()`/`Input("prompt")`, native
+[The Kobo Programming Language](https://github.com/thinkmine/Kobo/blob/master/KOBO-LANGUAGE.md).
+Version 0.1.40 supports `Print(...)` and `Input()`/`Input("prompt")`, native
 `json` values with `StringValue` and implicit string conversion, and
 `prompt:Type` declarations with `${expression}` interpolation and `[tool]`
 functions. Prompt text outside interpolations is literal, even when it contains
-JSON or braces. See the [AI tutorial](https://github.com/thinkmine/KoboLang/blob/master/KoboLang.TestHarness/input/tutorials/11.ai.kobo);
+JSON or braces. `verbatim "..."` strings keep backslashes and `${...}` as
+written; `raw "..."` strings keep backslashes but still interpolate `${...}`.
+`@"..."` and `"""..."""` strings are errors. Select-first queries accept
+`skip <count> take <count>` before `project`, and a result step after the
+projection: `project <expression> | list`, `| first`, `| last`, `| count`, or,
+for numeric projections, `| average`, `| sum`, `| min`, and `| max`.
+`| average`, `| min`, and `| max` also accept a selector, as in
+`project planet | min(p => p.Length)`. See the [AI tutorial](https://github.com/thinkmine/Kobo/blob/master/KoboLang.TestHarness/input/tutorials/11.ai.kobo);
 the sample `kobo.ai.json` reads `OPENAI_API_KEY` from the environment at runtime.
 Standalone single-file builds accept `#:sdk`, `#:property`, and `#:package`;
 these are passed to the SDK build. Other app directives, including `#:project`,
@@ -314,7 +321,7 @@ Always use `function:<return-type> <name>(<parameters>)`:
     return value
 }
 
-[public, static] function:T Identity<T>(T value) where T : struct
+[public, static] function:T Identity<T>(T value) where T is struct
 {
     return value
 }
@@ -503,7 +510,7 @@ Extension blocks generate members in a shared `static partial class Extensions`,
 
 ### Syntax rules to remember
 
-Keep declaration colons adjacent to both the keyword and type/name: `class:Person`, `function:void`, and `var:int`, not `class: Person` or `var :int`. Parameters use `Type name`, without a colon. Generic constraints use `where T : struct`.
+Keep declaration colons adjacent to both the keyword and type/name: `class:Person`, `function:void`, and `var:int`, not `class: Person` or `var :int`. Parameters use `Type name`, without a colon. Generic constraints use `where T is struct`.
 
 Use Kobo declaration forms such as `class:Person`. Kobo is a preview
 language. If an expression or declaration fails to compile, inspect the
@@ -521,9 +528,9 @@ If the tool is already installed, use `dotnet tool update` instead of `dotnet to
 
 ## Further reading
 
-- [Project overview and language reference](https://github.com/thinkmine/KoboLang#language-summary-and-syntax)
-- [VS Code extension documentation](https://github.com/thinkmine/KoboLang/blob/master/Kobo.Lang.VSCode/README.md)
-- [Example Kobo source](https://github.com/thinkmine/KoboLang/blob/master/KoboLang.TestHarness/input/main.kobo)
+- [Project overview and language reference](https://github.com/thinkmine/Kobo#language-summary-and-syntax)
+- [VS Code extension documentation](https://github.com/thinkmine/Kobo/blob/master/Kobo.Lang.VSCode/README.md)
+- [Example Kobo source](https://github.com/thinkmine/Kobo/blob/master/KoboLang.TestHarness/input/main.kobo)
 
 ## License
 

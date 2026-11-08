@@ -1,6 +1,6 @@
 # Kobo.Lang.BuildTools
 
-## Language version 0.1.29
+## Language version 0.1.40
 
 **NuGet package:** `thinkmine.kobo.lang.buildtools`
 
@@ -56,19 +56,6 @@ per entry.
 Configure dependencies with project `PackageReference` entries; imports
 do not install packages. See the [imports guide](../IMPORTS.md).
 
-Enable standard Roslyn output inspection with:
-
-```xml
-<PropertyGroup>
-  <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
-</PropertyGroup>
-```
-
-Generated names contain the readable Kobo filename and a SHA-256 digest of its
-normalized full input path, so equal filenames in different directories do not
-collide. Names are stable for the same input path; moving a checkout changes the
-digest. Generated content has no timestamps and uses LF line endings.
-
 Diagnostics:
 
 | Code | Severity | Meaning |
@@ -80,9 +67,7 @@ Diagnostics:
 
 Kobo diagnostics identify the original file and its one-based compiler line and
 column (clamped to the available source). Project compiler diagnostics retain
-their normal codes and point to the relevant compilation locations. Full Kobo
-source-level debugging is not implemented, so compiler locations may differ
-from the corresponding Kobo declarations.
+their normal codes.
 
 Union-typed variables such as `var:union(int,string) value = 42` use a shared
 public union named `union_of_int_string` in the module namespace.
@@ -110,9 +95,7 @@ for intentional dynamic binding. Previous untyped fields used dynamic binding
 and may need to be updated. Cancellation is propagated through file reads, compiler
 phases, semantic-model construction, and source emission.
 
-The analyzer embeds the existing compiler sources at build time; its only
-non-framework dependencies are the Roslyn assemblies supplied by the compiler
-host. It does not require the CLI tool or Zaria packages. The package supplies
+The package does not require the CLI tool or Zaria packages. It supplies
 `thinkmine.kobo.ai` transitively for generated native AI code; applications that
 do not execute prompts do not initialize AI clients or read AI configuration.
 
@@ -128,7 +111,7 @@ variables in configuration are substituted only at runtime. Prompts require
 an async function or a native `#:script` top-level program. Only one application
 file may supply top-level statements in a project.
 
-Use `<LangVersion>preview</LangVersion>` for generated native union types.
+Use `<LangVersion>preview</LangVersion>` for native union types.
 See [native AI and interpolation](../KOBO-LANGUAGE.md#native-ai-prompts) for
 providers, configuration, tool eligibility, error behavior, and hosting APIs.
 
@@ -144,19 +127,3 @@ current folder, `kobo build ./src` for a selected folder, and
 `--recursive` is supplied, and compile discovered files together into one
 assembly. See the [command-line compiler guide](../Kobo.Lang.Compiler/README.md)
 for installation and output options.
-
-## Building and testing the package
-
-Build the package from the repository:
-
-```sh
-dotnet pack Kobo.AI/Kobo.AI.csproj -c Release -o artifacts
-dotnet pack Kobo.Lang.BuildTools/Kobo.Lang.BuildTools.csproj -c Release -o artifacts
-```
-
-Run the generator-driver and real NuGet consumer regression checks:
-
-```sh
-dotnet run --project KoboLang.TestHarness -- --build-tools-self-test
-dotnet run --project KoboLang.TestHarness -- --build-tools-package-test
-```

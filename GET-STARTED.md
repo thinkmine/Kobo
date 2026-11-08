@@ -1,6 +1,6 @@
 # Get Started with Kobo
 
-## Language version 0.1.29
+## Language version 0.1.40
 
 Kobo lets you build standalone .NET programs, add Kobo source files to an
 existing .NET project, or keep a small utility and its settings in one file.

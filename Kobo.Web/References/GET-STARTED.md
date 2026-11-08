@@ -1,6 +1,6 @@
 # Get Started with Kobo
 
-## Language version 0.1.29
+## Language version 0.1.40
 
 Kobo lets you build standalone .NET programs, add Kobo source files to an
 existing .NET project, or keep a small utility and its settings in one file.
@@ -23,7 +23,7 @@ Confirm that an `11.0` SDK is listed. If your working directory inherits a
 Kobo is currently a preview. The examples use prerelease packages; your
 configured NuGet sources must contain them. If you are using locally built
 packages rather than a published feed, see
-[Building from source](https://github.com/thinkmine/KoboLang/blob/master/Kobo.Lang.Compiler/README.md#building-from-source).
+[Building from source](https://github.com/thinkmine/Kobo/blob/master/Kobo.Lang.Compiler/README.md#building-from-source).
 
 ### Optional: set up VS Code
 
@@ -277,10 +277,10 @@ does not add an assembly reference.
 Continue with [The Kobo Programming Language](/docs/language-reference.md) for variables,
 control flow, type extensions, classes, inheritance, lambdas, queries, native
 JSON, and typed AI prompts. For hands-on examples, see the
-[console tutorial](https://github.com/thinkmine/KoboLang/blob/master/KoboLang.TestHarness/input/tutorials/1.variables.kobo),
-[string tutorial](https://github.com/thinkmine/KoboLang/blob/master/KoboLang.TestHarness/input/tutorials/2.strings.kobo), and
-[AI tutorial](https://github.com/thinkmine/KoboLang/blob/master/KoboLang.TestHarness/input/tutorials/11.ai.kobo). The AI tutorial
+[console tutorial](https://github.com/thinkmine/Kobo/blob/master/KoboLang.TestHarness/input/tutorials/1.variables.kobo),
+[string tutorial](https://github.com/thinkmine/Kobo/blob/master/KoboLang.TestHarness/input/tutorials/2.strings.kobo), and
+[AI tutorial](https://github.com/thinkmine/Kobo/blob/master/KoboLang.TestHarness/input/tutorials/11.ai.kobo). The AI tutorial
 uses an adjacent `kobo.ai.json` with an environment-supplied API key.
-See the [compiler guide](https://github.com/thinkmine/KoboLang/blob/master/Kobo.Lang.Compiler/README.md) for installation and
-command-line details, or the [VS Code guide](https://github.com/thinkmine/KoboLang/blob/master/Kobo.Lang.VSCode/README.md) for
+See the [compiler guide](https://github.com/thinkmine/Kobo/blob/master/Kobo.Lang.Compiler/README.md) for installation and
+command-line details, or the [VS Code guide](https://github.com/thinkmine/Kobo/blob/master/Kobo.Lang.VSCode/README.md) for
 editor setup.

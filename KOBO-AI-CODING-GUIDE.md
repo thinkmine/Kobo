@@ -1,6 +1,6 @@
 # Writing applications in Kobo with AI
 
-## Language version 0.1.29
+## Language version 0.1.40
 
 Use this guide as context for ChatGPT, Codex, Claude, and other coding agents
 asked to create or modify Kobo programs. The authoritative syntax reference is
@@ -48,11 +48,13 @@ or claim that an unverified feature works.
 | Typed/inferred variable | `var:int count = 0`; `var name = "Kobo"` |
 | Constructor | `[public] new(string name) { Name = name }` inside a type |
 | Interpolation | `"Hello, ${name}!"` |
+| Literal strings | `verbatim "C:\temp\${not_interpolated}"`; `raw "C:\temp\${name}"` (no escapes; interpolates); `@"..."` and `"""..."""` are errors |
 | Console | `Print(value)`; `Input()`; `Input("Name: ")` |
 | Nullable value | `var:string? name = null`; `name?.Length ?? 0` |
 | Union value | `var:union(int,string) result = 42` |
 | Delegate | `var:(int)->int doubleValue = value => value * 2` |
 | Select-first query | `select item from items where item.Active project item.Name;` |
+| Query paging and result | `select item from items where item.Active skip 10 take 5 project item.Name \| list`; steps: `list`, `first`, `last`, `count`, `average`, `sum`, `min`, `max` (aggregate a numeric projection: `project p.Age \| average`; `average`, `min`, and `max` also take a selector: `project p \| min(p => p.Length)`) |
 | JSON text | `var:json value = text`; `var:string text = value`; `value.StringValue` |
 
 Declaration colons have **no surrounding whitespace**: `class:Name`, not
@@ -69,6 +71,18 @@ parameters. Type-member functions can be overloaded. Union declarations are
 available as variable types, not standalone `union:Name` declarations. Consult
 the specification for accessibility, generic constraints, `this`, events,
 operator overloads, and native extern signatures.
+
+Use `where T is Constraint` on generic declarations and `parent.Member` for
+parent members. Call a parent constructor with `new(...) calls parent(...)`.
+Global constants use `const:Type Name = value` outside a type.
+For reusable class composition, `[partner] class:Template` declares a partner,
+`class:Owner partners Template` consumes it, and each owner constructor can
+supply `calls Template(arguments)`. A partner remains instantiable as a
+standalone class; each owner receives a distinct private nested implementation.
+Non-private partner members can be used inside the owner without being
+forwarded through its public API. Functions can declare side-effect-free
+Boolean `requires` and `ensures` clauses on consecutive lines after their
+header; value-returning functions may refer to `result` in `ensures`.
 
 ## Complete single-file example
 
@@ -173,7 +187,7 @@ a multiline JSON object literal can follow `=` on the same line or the next line
 ```kobo
 #:script
 
-var:string source = """{"name":"Kobo"}"""
+var:string source = raw """{"name":"Kobo"}"""
 var:json details = source
 var:string text = details
 var:json copy = text

@@ -1,8 +1,8 @@
 # The Kobo Programming Language
 
-## Language version 0.1.29
+## Language version 0.1.40
 
-This specification describes Kobo source as accepted by the version 0.1.29
+This specification describes Kobo source as accepted by the version 0.1.40
 compiler and runtime. Examples are Kobo unless marked as configuration or
 console output. Language syntax, type rules, runtime behavior, errors, and
 tooling limits are described separately; examples do not grant forms that
@@ -40,9 +40,9 @@ and modifiers precede declarations in square brackets.
 Braces delimit statement blocks and type bodies. Ordinary single-line
 statements may omit their final semicolon; multiline query statements must
 end with one. `//` starts a line comment; `/* ... */` encloses a block
-comment. String literals use quotes, `@"..."` for verbatim text, or triple
-quotes for raw multiline text. `${expression}` interpolates Kobo expressions;
-`\${...}` remains literal. Prompt bodies have distinct lexical rules
+comment. String literals use quotes. `verbatim "..."` disables escapes and
+interpolation; `raw "..."` disables escapes but keeps interpolation.
+`${expression}` interpolates Kobo expressions; `\${...}` remains literal. Prompt bodies have distinct lexical rules
 documented under [native AI prompts](#native-ai-prompts).
 
 Local `var` uses its initializer to infer a type. Explicit annotations are
@@ -597,6 +597,10 @@ Global functions cannot be overloaded, even with different parameter types,
 parameter counts, return types, or generic arities. Type-member overloads remain allowed.
 Top-level functions in a `#:script` file must also have unique names.
 
+Global constants use `const:Type Name = value` outside any type. They are
+available to other Kobo declarations in the same module and are exposed
+through the module's `Global` type.
+
 Unqualified calls to global functions are emitted as `Global.Name(arguments)`
 when no local callable takes precedence. This includes repeated and nested calls
 and functions with parameters. Required arguments must still be supplied; a
@@ -611,7 +615,7 @@ unknown-function error.
     [public] property:T Value { get; set; }
 }
 
-[public, static] function:T Identity<T>(T value) where T : struct
+[public, static] function:T Identity<T>(T value) where T is struct
 {
     return value
 }
@@ -619,6 +623,32 @@ unknown-function error.
 
 Type parameters let classes and functions work with many types while preserving
 type checking. Constraints restrict the acceptable type arguments.
+
+### Function contracts
+
+Attach one Boolean expression per `requires` or `ensures` line immediately
+after a function or constructor header. Preconditions run before the body;
+postconditions run before each successful return. `result` names the value
+being returned in a non-void function. The editor highlights `result` as a
+special contract identifier inside `ensures`; elsewhere, it remains an ordinary
+identifier.
+
+```kobo
+function:int Divide(int numerator, int denominator)
+    requires denominator != 0
+    ensures result >= 0
+{
+    return numerator / denominator
+}
+```
+
+Failed preconditions raise `ArgumentException`; failed postconditions raise
+`InvalidOperationException`. Constant false conditions are rejected during
+compilation. Expressions must be side-effect-free; calls, member access,
+mutation, and allocation are not allowed in contracts. Constructors support
+preconditions but not postconditions.
+Contracts on iterators, ref-returning functions, multiline signatures, and
+implicit member expressions are not currently supported.
 
 ## Lambdas and delegate types
 
@@ -697,8 +727,21 @@ var match = Find(names)
 ```
 
 The trailing block supplies the last argument; it is not an independent block.
-Its opening `{` may appear on the call line or the next line, and an explicit
-lambda arrow may be followed by the expression on the next line:
+Its opening `{` may appear on the call line or the next line, with or without
+an argument list:
+
+```kobo
+error{
+    Print("This is an error")
+}
+
+error
+{
+    Print("This is an error")
+}
+```
+
+An explicit lambda arrow may be followed by the expression on the next line:
 
 ```kobo
 Search(numbers){
@@ -768,6 +811,9 @@ Modifier lists precede declarations in square brackets:
 }
 ```
 
+Modifiers must be written inside a square-bracketed declaration list; a
+modifier written outside the brackets is an error.
+
 `public` exposes a declaration; `private` restricts it to its containing type;
 `internal` restricts it to its assembly. `protected` exposes inherited members
 to derived types. `static` associates a member with its type rather than an
@@ -785,6 +831,64 @@ class:OldService
 
 Import `System` for `Obsolete`.
 
+### Partner classes
+
+Mark a class `[partner]` and list it with `partners` on each collaborator. A
+partner class remains a normal standalone class; `new Identity(...)` and
+`var:Identity` refer to that standalone type. Each collaborator receives its
+own private nested partner implementation, so its CLR type is distinct from
+the standalone class and from implementations in other collaborators.
+
+Use `calls Identity(arguments)` in a collaborator constructor to initialize
+its nested partner. Each constructor must initialize every declared partner
+exactly once. If every partner has a public parameterless constructor, the
+compiler creates the instances automatically when the collaborator has no
+constructor or a constructor without a `calls` clause. A partner with no
+declared constructor has an implicit public parameterless constructor.
+
+Non-private partner members can be used inside the collaborator, but are not
+added to the collaborator's public API. Explicit `[private]` partner members
+remain inaccessible through the collaboration. Unqualified names resolve to
+locals and parameters first, then collaborator members, then partner members.
+If multiple partners provide the same name, qualify it with the partner name,
+such as `Identity.Name`. `new Identity(...)` always creates the standalone
+class; the generated nested implementation cannot be named or constructed in
+Kobo code.
+
+```kobo
+[partner] class:Identity
+{
+    [public] var:string Name = ""
+    [public] new(string name)
+    {
+        Name = name
+    }
+    [public] function:string GetName() => Name
+}
+
+[public] class:Worker partners Identity
+{
+    [public] new(string name) calls Identity(name)
+    {
+    }
+
+    [public] function:string GetName()
+    {
+        return Identity.Name
+    }
+
+    [public] function:string StandaloneName()
+    {
+        var:Identity other = new Identity("Jane")
+        return other.GetName()
+    }
+}
+```
+
+The partner class and its collaborators must currently be in the same Kobo
+file. Partner classes may inherit ordinary classes but cannot inherit other
+partner classes.
+
 ### Inheritance, interfaces, and polymorphism
 
 Use `is` to name a base class or implemented interface:
@@ -792,8 +896,7 @@ Use `is` to name a base class or implemented interface:
 `is` is the only inheritance and interface-implementation syntax. Separate
 multiple base types with commas, as in `class:Service is BaseService, IContract`.
 Colon-based base lists and keywords such as `inherits`, `extends`, and
-`implements` are rejected. Generic constraints still use `where T : Constraint`;
-that colon is not an inheritance declaration.
+`implements` are rejected. Generic constraints use `where T is Constraint`.
 
 ```kobo
 [public] interface:ISpeaker
@@ -824,7 +927,7 @@ Console.WriteLine(animal.Speak())
 
 Abstract members require implementations in concrete derived classes.
 Virtual members provide implementations that derived classes can override.
-`base.Member()` invokes an accessible base implementation.
+`parent.Member()` invokes an accessible parent implementation.
 
 ### Structs and records
 
@@ -951,9 +1054,9 @@ Inside a class, struct, or record, declare a constructor using `new(...)`:
     {
     }
 
-    [public] new(int value) : base(value)
+    [public] new(int value) calls parent(value)
     {
-        base.Initialize()
+        parent.Initialize()
     }
 }
 ```
@@ -964,9 +1067,8 @@ invokes the base constructor. A bare `new()` constructor defaults to
 `protected internal` and `private protected`
 combinations for classes. Struct constructors do not allow `protected`.
 Other modifiers, such as `virtual`, `override`, or `static`, are rejected.
-Parameters follow ordinary function rules. Initializers select another
-constructor with `this(...)` or a base constructor with `base(...)`.
-`base.Member` accesses a base member.
+Parameters follow ordinary function rules. Initializers select another constructor with `: this(...)` or a parent
+constructor with `calls parent(...)`. `parent.Member` accesses a parent member.
 
 ### Operator overloads and conversions
 
@@ -1093,7 +1195,8 @@ select <identifier> from <expression>
     [where <condition>]
     [group <expression> by <expression> [into <identifier>]]
     [orderby <expression> [asc|desc]]
-    [project <expression>]
+    [skip <count>] [take <count>]
+    [project <expression> [| list|first|last|count|sum|average|min|max|average(<selector>)|min(<selector>)|max(<selector>)]]
 ```
 
 Without `project`, the initial identifier is selected. Ordering defaults to
@@ -1121,6 +1224,94 @@ var summaries = select person from people
 ```
 
 Without a subsequent projection, a grouping query returns its groups.
+
+### Paging with `skip` and `take`
+
+`skip <count>` passes over the first results and `take <count>` keeps at most
+that many. Both are optional, appear after `where`, `group`, and `orderby`
+clauses and before `project`, and `skip` comes before `take`. Counts can be
+literals or any in-scope expression:
+
+```kobo
+var page_size = 5
+var planets_that_start_with_m = select planet from planet_list
+                                join name from names on planet == name
+                                where planet.StartsWith('m')
+                                skip 10 take page_size
+                                project planet;
+```
+
+Paging applies to the complete query result, after ordering.
+
+### Result steps with `|`
+
+A query normally produces a lazily evaluated sequence. Follow the `project`
+expression with `|` and a result step to produce a different result:
+
+| Step | Result |
+| --- | --- |
+| `\| list` | A `List<T>` containing every result |
+| `\| first` | The first result, or the type's default value when there are none |
+| `\| last` | The last result, or the type's default value when there are none |
+| `\| count` | The number of results, as an `int` |
+| `\| average` | The average of numeric results |
+| `\| sum` | The total of numeric results |
+| `\| min` | The smallest result |
+| `\| max` | The largest result |
+| `\| average(selector)` | The average of the selector's numeric values |
+| `\| min(selector)` | The smallest value the selector returns |
+| `\| max(selector)` | The largest value the selector returns |
+
+```kobo
+var planets = select planet from planet_list
+              where planet.StartsWith('m')
+              project planet | list;
+var first_match = select planet from planet_list orderby planet project planet | first
+var matching = select planet from planet_list where planet.StartsWith('m') project planet | count
+
+var average_age = select p from people
+                      where p.Age > 25
+                      project p.Age | average;
+var youngest = select p from people project p.Age | min
+```
+
+`average` and `sum` require a numeric projection, such as `p.Age` or
+`order.Total * 1.1`; projecting text reports an error at the `|`. `min` and
+`max` are intended for numbers and also compare other ordered values, such as
+dates. Project the value to aggregate, as in `project p.Age | average`, or give
+`average`, `min`, or `max` a selector that picks the value from each result:
+
+```kobo
+var shortest_name = select planet from planet_list project planet | min(p => p.Length)
+var longest_name = select planet from planet_list project planet | max(p => p.Length)
+var average_age = select p from people project p | average(p => p.Age)
+```
+
+A selector is a single lambda (or delegate) applied to each projected result.
+The step returns the selected value, not the item: `| min(p => p.Length)` is
+the length of the shortest name. An `average` selector must return a number.
+Only `average`, `min`, and `max` accept a selector; `list`, `first`, `last`,
+`count`, and `sum` take no arguments. `sum` of an empty query is
+`0`. `average`, `min`, and `max` of an empty query of numbers fail at run time
+with `InvalidOperationException`, so check `| count` first when a query may have
+no results.
+
+A step applies after paging, so `skip 10 take 5 ... project item | count`
+counts at most five results. A query that spans lines ends with `;`, and the
+`|` may start a new line:
+
+```kobo
+var oldest = select p from people
+             orderby p.Age
+             project p.Age
+             | max;
+```
+
+Only one step is allowed, and it must end the query. To combine the projected
+value with another value using bitwise OR, parenthesize it:
+`project (flags | mask)`. `skip`, `take`, and the step names keep their keyword
+meaning only in these query positions, so they remain usable as variable names
+elsewhere, including as the projected value itself (`project count`).
 
 Queries must use the select-first form. From-first expressions
 (`from person in people ...`) are rejected, including nested queries.
@@ -1341,28 +1532,55 @@ In a multi-file build, only the file marked with `#:script` gets these semantics
 global functions in other files continue to be generated in `Global`. Without
 `#:script`, ordinary Kobo global-function behavior is unchanged.
 
-#### Raw string literals
+#### `verbatim` and `raw` strings
 
-Triple-quoted strings preserve multiline text without escaping quotes or
-backslashes:
+Kobo has three string forms: ordinary quoted strings, `verbatim "..."`, and
+`raw "..."`. Place `verbatim` or `raw` immediately before a quoted string to
+turn off ordinary escape processing. Both are contextual keywords: they only
+have this meaning when followed by a string, so `raw` and `verbatim` remain
+usable as identifiers. The `@"..."` and triple-quoted (`"""..."""`) string
+forms are not part of Kobo and are reported as errors.
+
+`verbatim "..."` presents its text exactly as written. Backslashes are not
+escapes and `${...}` is not interpolated. Write `""` for a quote character. A
+verbatim string may span lines; line breaks and indentation are kept.
 
 ```kobo
-var:string label4 = """
-                    This is a
-                    string literal
-                    """
+var:string path = verbatim "c:${hello}//\\"     // c:${hello}//\\
+var:string quoted = verbatim "say ""hi"""         // say "hi"
 ```
 
-The compiler preserves the same raw literal. Literal contents, whitespace and
-delimiter length are preserved; code-looking text inside is not transformed.
-Raw-string indentation rules apply: the closing delimiter determines the
-common indentation removed from the runtime value. Use four or more quotes
-as delimiters when the text itself contains triple quotes.
+`raw "..."` ignores backslashes and other special characters, but `${...}`
+interpolation continues to work. Code-looking text inside is never treated as
+code. When the opening quote ends its line and the closing quote sits on its
+own line, the closing quote's indentation is removed from every line, and the
+first and last line breaks are not part of the value. Every content line must
+start with that indentation.
+
+```kobo
+var:string x = raw "
+                    The quick
+                    brown
+                    fox
+                    jumped over the lazy dog!
+                    "
+var:string folder = raw "C:\files\${name}\{draft}"   // C:\files\Kobo\{draft}
+```
+
+The value of `x` is the four lines without their leading indentation.
+Text that starts on the opening line keeps every character, including line
+breaks and indentation. A `raw` string opened with one quote cannot contain
+`"`; open it with three or more quotes, such as `raw """He said "hi" """`,
+and close it with the same number. Use a longer delimiter, such as `raw """"`,
+when the text contains three consecutive quotes. `raw ""` is an empty string.
+Because backslashes are literal in a `raw` string, `\${...}` is a backslash
+followed by an interpolation; write `${"$" + "{"}` to produce the text `${`.
 
 #### String interpolation
 
-`${expression}` is Kobo's default interpolation syntax in ordinary quoted,
-verbatim, and raw strings. The compiler evaluates Kobo interpolation:
+`${expression}` is Kobo's interpolation syntax in ordinary quoted and
+`raw "..."` strings. `verbatim "..."` strings never interpolate. The compiler
+evaluates Kobo interpolation:
 
 ```kobo
 var:string greeting = "hello ${first_name} ${last_name}"
@@ -1386,9 +1604,9 @@ Parenthesize conditional expressions when combining them with
 alignment or formatting; unformatted `${flag ? "yes" : "no"}` also remains
 supported. Normal Kobo type and scope rules apply; alignment must be a
 constant integer, and format strings use .NET formatting rules.
-Literal braces are preserved. Write `\${name}` to include the
-literal text `${name}`. `@{name}` has no special meaning. Other interpolation
-prefixes (`$"..."`, `$@"..."`, `@$"..."`, and interpolated raw strings)
+Literal braces are preserved. Except in `raw "..."` strings, write `\${name}`
+to include the literal text `${name}`. `@{name}` has no special meaning. Other interpolation
+prefixes (`$"..."`, `$@"..."`, `@$"..."`, and `$"""..."""`)
 are errors, including inside Kobo placeholders. Only Kobo `${...}`
 interpolation is allowed in source.
 
