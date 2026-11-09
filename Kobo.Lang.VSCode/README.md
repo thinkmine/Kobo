@@ -1,6 +1,6 @@
 # Kobo Language Support
 
-## Extension version 0.1.40 (Kobo language 0.1.40)
+## Extension version 0.1.47 (Kobo language 0.1.47)
 
 Kobo Language Support brings `.kobo` language support to Visual Studio Code. It starts the Kobo language server to provide semantic syntax highlighting and diagnostics for Kobo source files. The language server reports transform errors and unresolved names (including undeclared variables) in the editor. Name analysis uses the current file and available runtime references, not the complete consuming project; the full build resolves cross-file/project references. This extension does not build or run your program.
 
@@ -84,7 +84,7 @@ Some core syntax:
 - **Types:** Declare types with a colon after the keyword: `class:Name`, `struct:Name`, or `interface:Name`. Use square brackets for modifiers and attributes, such as `[public, abstract]`.
 - **Inheritance:** Use only `is`, as in `class:Child is Base, IContract`. Colon-based base lists and `inherits`, `extends`, or `implements` are rejected.
 - **Generic constraints and parent access:** Write `where T is Constraint`, use `parent.Member` for parent members, and `calls parent(...)` in a constructor to initialize its parent.
-- **Composition and contracts:** Declare a standalone-capable `[partner] class:Template`, list it with `partners` on a collaborator, and initialize nested implementations with `calls Template(...)`. Non-private partner members resolve inside the collaborator without being forwarded to its public API. A function may use `requires` and `ensures` Boolean clauses immediately after its header.
+- **Composition and contracts:** Declare a standalone-capable `[partner] class:Template`, list it with `partners` on a collaborator, and initialize nested implementations with `calls Template(...)`. Only fields, properties, and functions marked `[shared]` are available inside the collaborator, without being forwarded to its public API. A function may use `requires` and `ensures` Boolean clauses immediately after its header.
 - **Functions:** Use `function:<return-type> <name>(<parameters>)`, for example `function:void Print(string message)`. Put modifiers before `function`, such as `[static]`.
 - **Parameters:** Declare parameters as `Type name`, such as `int count`. The `name: Type` form is not supported.
 - **Variables and constants:** Use `var:Type name = value` for an explicitly typed variable, `var name = value` for an inferred local or field, and `const:Type name = value` for a constant, including at global scope. Inferred fields have fixed compile-time types; use `var:dynamic` for intentional dynamic binding or `var:Type` when the initializer cannot determine a type.

@@ -1,8 +1,8 @@
 # The Kobo Programming Language
 
-## Language version 0.1.40
+## Language version 0.1.47
 
-This specification describes Kobo source as accepted by the version 0.1.40
+This specification describes Kobo source as accepted by the version 0.1.47
 compiler and runtime. Examples are Kobo unless marked as configuration or
 console output. Language syntax, type rules, runtime behavior, errors, and
 tooling limits are described separately; examples do not grant forms that
@@ -40,7 +40,15 @@ and modifiers precede declarations in square brackets.
 Braces delimit statement blocks and type bodies. Ordinary single-line
 statements may omit their final semicolon; multiline query statements must
 end with one. `//` starts a line comment; `/* ... */` encloses a block
-comment. String literals use quotes. `verbatim "..."` disables escapes and
+comment. A line containing only `###` starts or ends a Markdown comment block;
+the block may continue to the end of the file. Markdown comment blocks are
+ignored as Kobo source and can contain prose and other Markdown. During
+compilation, when at least one such block is present, the compiler also writes
+a `.kobo.md` file containing the Markdown blocks as Markdown and the code
+outside them in fenced `kobo` code blocks. String literals use quotes.
+Within a Markdown comment block, `\###` is an escaped heading marker: it
+remains in the comment and is emitted as `###`, without its backslash.
+`verbatim "..."` disables escapes and
 interpolation; `raw "..."` disables escapes but keeps interpolation.
 `${expression}` interpolates Kobo expressions; `\${...}` remains literal. Prompt bodies have distinct lexical rules
 documented under [native AI prompts](#native-ai-prompts).
@@ -205,6 +213,29 @@ declarations belong to the global namespace.
 var count = 1
 count += 1;
 ```
+
+Markdown comments can document a Kobo source file and produce a Markdown
+companion when compiled:
+
+```kobo
+###
+# H1
+## H2
+\### H3
+#### H4
+##### H5
+
+###
+function:string Greeting() => "Hello"
+```
+
+The generated Markdown contains the headings as `# H1` through `##### H5`;
+the backslash before `\### H3` is removed. The Kobo declaration is fenced as
+code. An unescaped delimiter line must contain only `###` (surrounding
+whitespace is allowed). Each delimiter toggles between Kobo source and
+Markdown; an unmatched opening delimiter comments out everything through
+end of file. Markdown comment text is excluded from Kobo transformation and
+compiled code.
 
 Semicolons are optional for ordinary single-line statements. Open parentheses
 and brackets, trailing operators, and leading continuation operators can extend
@@ -829,24 +860,24 @@ compiler creates the instances automatically when the collaborator has no
 constructor or a constructor without a `calls` clause. A partner with no
 declared constructor has an implicit public parameterless constructor.
 
-Non-private partner members can be used inside the collaborator, but are not
-added to the collaborator's public API. Explicit `[private]` partner members
-remain inaccessible through the collaboration. Unqualified names resolve to
-locals and parameters first, then collaborator members, then partner members.
-If multiple partners provide the same name, qualify it with the partner name,
-such as `Identity.Name`. `new Identity(...)` always creates the standalone
-class; the generated nested implementation cannot be named or constructed in
-Kobo code.
+Only partner fields, properties, and functions marked `[shared]` are available
+inside a collaborator; other members remain inaccessible even if they are
+non-private. Shared members are not added to the collaborator's public API.
+Unqualified names resolve to locals and parameters first, then collaborator
+members, then shared partner members. If multiple partners provide the same
+name, qualify it with the partner name, such as `Identity.Name`.
+`new Identity(...)` always creates the standalone class; the generated nested
+implementation cannot be named or constructed in Kobo code.
 
 ```kobo
 [partner] class:Identity
 {
-    [public] var:string Name = ""
+    [public, shared] var:string Name = ""
     [public] new(string name)
     {
         Name = name
     }
-    [public] function:string GetName() => Name
+    [public, shared] function:string GetName() => Name
 }
 
 [public] class:Worker partners Identity
@@ -1453,6 +1484,14 @@ When supplying both output options, place `--output-directory` before `--name`.
 Quote paths containing spaces. An empty discovery result or failed compilation
 is an error. `--recursive` is not valid with a single-file input.
 
+If a compiled source contains a Markdown comment block, the compiler also
+writes `<filename>.kobo.md` next to that source's output. Use
+`--markdown <relative-path>` to choose a different Markdown output path for a
+single-file build; it is relative to the output directory. For a folder build,
+the option names a relative output directory, and each generated
+`<filename>.kobo.md` retains its source-relative path beneath that directory.
+Sources without Markdown comment blocks do not produce Markdown files.
+
 ### Single-file application directives
 
 A standalone app can describe its SDK, build properties, and package
@@ -1491,13 +1530,25 @@ dotnet ./build/App.dll
 
 Use `#:script` to enable top-level Kobo statements in one source file.
 The former `#:app` marker is no longer accepted. To execute a file directly,
-place `#:script` on its exact first line and use `kobo run path/to/file.kobo`.
+place `#:script` as the first statement and use `kobo run path/to/file.kobo`.
+Whitespace and Markdown comment blocks may precede the directive; they are
+ignored while the script is identified and executed, and Markdown is written to
+the companion file. No other Kobo statements may appear before `#:script`.
 This requires the .NET 11 SDK: Kobo compiles and launches
 `dotnet run --file`, forwarding console I/O and the application exit code.
 Place it before Kobo code; it takes no value. Top-level variables become local
 variables, and top-level functions become local functions that can capture
 those variables. These functions are not emitted in the generated `Global`
 class. Type declarations remain ordinary top-level Kobo types.
+
+To pass command-line arguments, use
+`kobo run path/to/file.kobo -- Ada "two words" --verbose`.
+The required `--` separator is consumed by Kobo; everything after it is
+available unchanged in the script's top-level `string[] args` array, including
+empty quoted strings and values beginning with `-`. For this command,
+`args[0]` is `"Ada"`, `args[1]` is `"two words"`, and `args[2]` is
+`"--verbose"`. With no arguments, or just a trailing `--`, `args` is empty.
+Additional arguments without the separator are rejected.
 
 ```kobo
 #:script

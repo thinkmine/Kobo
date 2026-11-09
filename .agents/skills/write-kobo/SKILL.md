@@ -5,7 +5,7 @@ description: "Use when creating, modifying, reviewing, or debugging Kobo .kobo p
 
 # Write and validate Kobo applications
 
-## Language version 0.1.40
+## Language version 0.1.47
 
 1. Read [the AI coding guide](../../../KOBO-AI-CODING-GUIDE.md) and its links
    to the language specification before writing Kobo.

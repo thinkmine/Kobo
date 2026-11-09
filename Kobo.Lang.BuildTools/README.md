@@ -1,6 +1,6 @@
 # Kobo.Lang.BuildTools
 
-## Language version 0.1.40
+## Language version 0.1.47
 
 **NuGet package:** `thinkmine.kobo.lang.buildtools`
 

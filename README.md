@@ -1,6 +1,6 @@
 # Kobo
 
-## Language version 0.1.40
+## Language version 0.1.47
 
 Kobo is a programming language for .NET with compact, consistent declarations,
 access to .NET libraries, and native AI prompts and tools.
@@ -64,5 +64,5 @@ prompts. The runtime reads `kobo.ai.json` alongside the application; consult
 the [AI section of the language specification](KOBO-LANGUAGE.md#native-ai-prompts)
 and [AI tutorial](KoboLang.TestHarness/input/tutorials/11.ai.kobo) for examples.
 
-Kobo is in preview. This documentation describes version 0.1.40, not a
+Kobo is in preview. This documentation describes version 0.1.47, not a
 guarantee of finalized syntax.

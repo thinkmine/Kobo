@@ -1,6 +1,6 @@
 # Kobo command-line compiler
 
-## Language version 0.1.40
+## Language version 0.1.47
 
 **NuGet package:** `thinkmine.kobo.lang`
 
@@ -38,7 +38,10 @@ Create the tool manifest only if the repository does not already have one. Resto
 
 ## Write, build, and run a program
 
-For a single-file script, put `#:script` on the exact first line:
+For a single-file script, put `#:script` as the first statement. Whitespace
+and leading `###` Markdown comment blocks may appear before it, but no other
+Kobo statements. Markdown comments are written to a `<filename>.kobo.md`
+companion file:
 
 ```kobo
 #:script
@@ -52,9 +55,24 @@ Run it directly with the .NET 11 SDK:
 kobo run hello.kobo
 ```
 
-`kobo run` compiles and executes the script. It requires a
-single `.kobo` file with `#:script` as its exact first line (no preceding
-blank lines, comments, or whitespace). The old `#:app` marker is rejected.
+Pass application arguments after the required `--` separator:
+
+```sh
+kobo run hello.kobo -- Ada "two words" --verbose
+```
+
+Scripts access these values through the top-level `string[] args` array:
+`args[0]` is `"Ada"`, `args[1]` is `"two words"`, and `args[2]` is
+`"--verbose"` in this example. The separator is not included in `args`;
+all subsequent values, including option-like values and empty quoted strings,
+are forwarded unchanged. With no arguments (or just a trailing `--`), `args`
+is empty. Additional arguments without `--` are rejected.
+
+`kobo run` preprocesses the source, writes a Markdown companion when comment
+blocks are present, then compiles and executes the remaining code. It requires
+a single `.kobo` file with `#:script` as its first statement. Whitespace and
+Markdown comment blocks may precede it, but no other Kobo statements. The old
+`#:app` marker is rejected.
 SDK, property, and package directives are preserved. Native AI scripts receive
 the compiler's runtime references and the adjacent `kobo.ai.json` configuration.
 AI scripts default to managed execution (`PublishAot=false`) to preserve the
@@ -95,7 +113,7 @@ The compiler writes `Hello.dll` and, for a console application, `Hello.runtimeco
 ### Compiler options
 
 ```text
-kobo build [<input.kobo>|<folder>] [--recursive] [--output-directory <directory>] [--name <assembly-name>] [--publish-code]
+kobo build [<input.kobo>|<folder>] [--recursive] [--output-directory <directory>] [--name <assembly-name>] [--publish-code] [--markdown <relative-path>]
 kobo --version
 ```
 
@@ -108,8 +126,23 @@ Run `kobo --version` by itself to print the compiler's NuGet package version.
 | `--output-directory <directory>` | Writes output to this directory, creating it if needed. Defaults to the input file's directory or the folder being built. |
 | `--name <assembly-name>` | Sets the output assembly name. Defaults to the input filename without its extension, or the folder name. |
 | `--publish-code` | Also saves a compiler source listing. |
+| `--markdown <relative-path>` | Writes the generated Markdown companion to a relative path. For a single-file build this is the output filename; for a folder build it is an output directory containing one source-relative `.kobo.md` file per documented source. |
 
-When using both named options, put `--output-directory` before `--name`, as shown above; this matches the current CLI command patterns. The `--publish-code` flag can accompany any build command.
+When using both named options, put `--output-directory` before `--name`, as shown above; this matches the current CLI command patterns. The `--publish-code` and `--markdown` flags can accompany any build command.
+
+A line containing only `###` toggles between Kobo source and Markdown comment
+text. An unmatched opening marker comments through end of file. Compiling a
+file with at least one marker writes `<filename>.kobo.md` next to the compiler
+output; text outside Markdown blocks is wrapped in fenced `kobo` code blocks.
+Within a Markdown block, escape `###` as `\###` to include it in the document;
+the generated Markdown drops the backslash.
+No Markdown companion is written when the source has no Markdown block.
+
+For example, `kobo build hello.kobo --markdown docs/hello.md` writes the
+single-file companion to `docs/hello.md` relative to the compiler output
+directory. With a folder build, `--markdown docs` is the output directory;
+each source's relative path is preserved beneath it to avoid filename
+collisions.
 
 The compiler emits a console application when a static `Main` method is present,
 and a library otherwise. Use a supported Kobo entry-point signature such as
@@ -162,7 +195,7 @@ From a source checkout, run the unified file/folder build regression checks with
 
 For a complete Kobo-first introduction, see
 [The Kobo Programming Language](https://github.com/thinkmine/Kobo/blob/master/KOBO-LANGUAGE.md).
-Version 0.1.40 supports `Print(...)` and `Input()`/`Input("prompt")`, native
+Version 0.1.47 supports `Print(...)` and `Input()`/`Input("prompt")`, native
 `json` values with `StringValue` and implicit string conversion, and
 `prompt:Type` declarations with `${expression}` interpolation and `[tool]`
 functions. Prompt text outside interpolations is literal, even when it contains

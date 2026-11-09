@@ -1,6 +1,6 @@
 # Writing applications in Kobo with AI
 
-## Language version 0.1.40
+## Language version 0.1.47
 
 Use this guide as context for ChatGPT, Codex, Claude, and other coding agents
 asked to create or modify Kobo programs. The authoritative syntax reference is
@@ -79,16 +79,18 @@ For reusable class composition, `[partner] class:Template` declares a partner,
 `class:Owner partners Template` consumes it, and each owner constructor can
 supply `calls Template(arguments)`. A partner remains instantiable as a
 standalone class; each owner receives a distinct private nested implementation.
-Non-private partner members can be used inside the owner without being
-forwarded through its public API. Functions can declare side-effect-free
-Boolean `requires` and `ensures` clauses on consecutive lines after their
-header; value-returning functions may refer to `result` in `ensures`.
+Only partner fields, properties, and functions marked `[shared]` can be used
+inside the owner; they are not forwarded through its public API. Functions
+can declare side-effect-free Boolean `requires` and `ensures` clauses on
+consecutive lines after their header; value-returning functions may refer to
+`result` in `ensures`.
 
 ## Complete single-file example
 
-The following is an entire `greet.kobo` program. `#:script` must be its exact
-first line. Top-level statements run in order; top-level functions can use
-values from the script's scope.
+The following is an entire `greet.kobo` program. For `kobo run`, `#:script`
+must be the first statement; whitespace and Markdown comments may precede it.
+Top-level statements run in order; top-level functions can use values from the
+script's scope.
 
 ```kobo
 #:script
@@ -105,6 +107,12 @@ else
 
 function:string Greeting(string name) => "Hello, ${name}!"
 ```
+
+Run scripts with `kobo run greet.kobo`. To pass command-line arguments, use
+`kobo run greet.kobo -- Ada "two words"` and read the top-level `string[] args`
+array in the script. The `--` separator is required when passing arguments
+and is not included in `args`; subsequent values are forwarded unchanged.
+Without arguments, `args` is empty.
 
 For a conventional app, define a `[public, static] function:void Main(string[]
 args)` inside a class; a library has no entry point. In a multi-file program,

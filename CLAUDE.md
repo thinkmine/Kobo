@@ -1,6 +1,6 @@
 # Kobo guidance for Claude
 
-## Language version 0.1.40
+## Language version 0.1.47
 
 Follow [AGENTS.md](AGENTS.md) and read the complete
 [AI coding guide](KOBO-AI-CODING-GUIDE.md) before generating `.kobo` files.

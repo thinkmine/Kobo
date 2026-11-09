@@ -1,6 +1,6 @@
 # Imports and fully qualified type replacement in Kobo
 
-## Language version 0.1.40
+## Language version 0.1.47
 
 Kobo separates two operations:
 
