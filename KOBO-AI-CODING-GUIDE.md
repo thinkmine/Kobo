@@ -1,6 +1,6 @@
 # Writing applications in Kobo with AI
 
-## Language version 0.1.47
+## Language version 0.1.53
 
 Use this guide as context for ChatGPT, Codex, Claude, and other coding agents
 asked to create or modify Kobo programs. The authoritative syntax reference is
@@ -23,7 +23,7 @@ or claim that an unverified feature works.
    project. Identify target framework, entry point, dependencies, storage,
    error handling, platforms, and testable behavior.
 2. Read the relevant sections of [the specification](KOBO-LANGUAGE.md).
-   Inspect nearby `.kobo` files and preserve their module paths, imports,
+   Inspect nearby `.kobo` or `.kb` files and preserve their module paths, imports,
    naming, and layout. Prefer existing .NET APIs over invented Kobo libraries.
 3. Implement a complete program, not disconnected snippets: entry point or
    public API, supporting types, imports, explicit data contracts, expected
@@ -54,7 +54,7 @@ or claim that an unverified feature works.
 | Union value | `var:union(int,string) result = 42` |
 | Delegate | `var:(int)->int doubleValue = value => value * 2` |
 | Select-first query | `select item from items where item.Active project item.Name;` |
-| Query paging and result | `select item from items where item.Active skip 10 take 5 project item.Name \| list`; steps: `list`, `first`, `last`, `count`, `average`, `sum`, `min`, `max` (aggregate a numeric projection: `project p.Age \| average`; `average`, `min`, and `max` also take a selector: `project p \| min(p => p.Length)`) |
+| Query paging and result | `select item from items where item.Active skip 10 take 5 project item.Name \| list`; steps: `list`, `first`, `last`, `count`, `average`, `sum`, `min`, `max`, `range`, `aggregate` (aggregate a numeric projection: `project p.Age \| average`; `average`, `min`, and `max` also take a selector: `project p \| min(p => p.Length)`) |
 | JSON text | `var:json value = text`; `var:string text = value`; `value.StringValue` |
 
 Declaration colons have **no surrounding whitespace**: `class:Name`, not
@@ -65,12 +65,15 @@ are significant. Use `/` in namespace paths and `.` for member access. A
 Kobo import is not a package dependency. Use
 `using HttpClient as Client from System/Net/Http` for lexical, fully qualified
 type replacement; this differs from an `import` alias.
+Switch values can use `switch (value)` or `switch value`. Declaration sections
+apply a modifier/attribute list to their contained declarations, but cannot be
+used in parameters, getters, setters, or inline lambdas.
 
 Global functions cannot be overloaded within a module, even with different
 parameters. Type-member functions can be overloaded. Union declarations are
 available as variable types, not standalone `union:Name` declarations. Consult
 the specification for accessibility, generic constraints, `this`, events,
-operator overloads, and native extern signatures.
+operator overloads, and native external signatures.
 
 Use `where T is Constraint` on generic declarations and `parent.Member` for
 parent members. Call a parent constructor with `new(...) calls parent(...)`.
@@ -108,11 +111,19 @@ else
 function:string Greeting(string name) => "Hello, ${name}!"
 ```
 
-Run scripts with `kobo run greet.kobo`. To pass command-line arguments, use
-`kobo run greet.kobo -- Ada "two words"` and read the top-level `string[] args`
+Run scripts with `kobo run --source greet.kobo`. To pass command-line arguments, use
+`kobo run --source greet.kobo -- Ada "two words"` and read the top-level `string[] args`
 array in the script. The `--` separator is required when passing arguments
 and is not included in `args`; subsequent values are forwarded unchanged.
 Without arguments, `args` is empty.
+
+To generate documentation content, a script can add top-level
+`render[:<language>] { ... }` blocks. When Markdown is generated
+(`--markdown` or `kobo generate`), each block runs in a separate render
+program and its `Print` output replaces the block as a fenced code block in the
+companion Markdown. Normal runs skip render blocks. Inside a block, use only
+the script's functions, types, and `const` values, plus data declared in the
+block; top-level variables and `Input()` are not available.
 
 For a conventional app, define a `[public, static] function:void Main(string[]
 args)` inside a class; a library has no entry point. In a multi-file program,
@@ -253,7 +264,7 @@ application or in the consuming project and uses `Ollama`, `OpenAI`, or
 credential. Do not paste secrets into the file; use a placeholder such as
 `"key": "${OPENAI_API_KEY}"` backed by the environment. Consult
 [the prompt specification](KOBO-LANGUAGE.md#native-ai-prompts) and
-[AI tutorial](KoboLang.TestHarness/input/tutorials/11.ai.kobo) for config
+[AI tutorial](KoboLang.TestHarness/input/tutorials/12.ai.kobo) for config
 and usage details.
 
 ## Pre-delivery review

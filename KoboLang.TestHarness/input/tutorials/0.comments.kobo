@@ -1,0 +1,74 @@
+#:script
+
+###
+# Comments in kobo
+
+
+Kobo supports traditional code comments as well as documentation-oriented 
+comments that integrate directly with its Markdown generation capabilities. 
+Developers can annotate code with explanations, examples, and structured 
+documentation, allowing source files to serve as both executable programs and 
+documentation. Kobo scripts also support render blocks that execute code and 
+incorporate its output into generated Markdown, enabling dynamic examples, 
+generated diagrams, and other programmatically produced documentation.
+
+---
+
+Kobo files take comments in three forms: 
+- standard,
+- multi-line/inline
+- markdown comments
+
+## Standard comments
+These comments follow the typical double forward slash pattern
+###
+
+//standard comment
+//this is a standard comment
+Print("Done") //it can also be placed here
+
+###
+## Multi-line / inline comments
+Defined using forward slash and an asterisk.
+Multi-line comments but can also work as inline comments
+
+###
+
+
+/*
+* This can be used for multi-line commenting
+*/
+Print("Multi Line")
+
+/* An inline comment */
+Print( "Comments were placed to describe this")
+
+###
+## Markdown Comments
+Kobo also allows for markdown comments.  Markdown comments
+must start and end with three pound (number) signs (\###).  Within the
+comment you can place any markdown text.  
+
+When markdown comments are present, any items not in the markdown text is autmatically 
+embedded in the output markdown as a **code** section.
+
+Markdown comments work with **kob build, run, or generate***
+
+For normal kobo ```build``` or ```run``` you
+can optionally specify a ```--markdown``` switch to enable markdown publishing.  --markdown
+allows for optionally specifying a full path to the markdown file that gets generated. If no
+name is specified file created will take the form **[file name].kobo.md**
+
+> Note: The open and closing indicator must have no characted on the same line before
+it.  There should be nothing before the \###  symbol  or it will be ignored (meaning it
+will be treated like code). This restriction includes whitespace characters.
+
+**\###**
+
+text in between can be any markdown
+
+**\###**
+
+The markdown start and stop delimiters must also be on separate lines.
+This, ```\### markdown text \###```, is not permitted
+###

@@ -1,6 +1,6 @@
 # Kobo repository agent guidance
 
-## Language version 0.1.47
+## Language version 0.1.53
 
 When creating or editing Kobo programs, read
 [the AI coding guide](KOBO-AI-CODING-GUIDE.md) and the relevant parts of

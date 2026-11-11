@@ -1,0 +1,15 @@
+#:script
+
+###
+This is a test
+###
+
+render
+{
+    Print("The quick brown fox jumped over the lazy dog")
+
+}
+
+var:(string y, string z) x = ("ten","eleven")
+
+Print("Done")

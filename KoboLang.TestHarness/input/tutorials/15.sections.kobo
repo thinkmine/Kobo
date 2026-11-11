@@ -1,0 +1,30 @@
+
+
+###
+# Grouping declarations
+
+# A declaration section applies its modifier or attributes to each member
+# inside the block. The declarations can also have their own modifier lists.
+
+###
+import * from System
+
+[public] class:SectionExample
+{
+    [public]
+    {
+        var:string Named = "hello"
+        property:int Age { get; set; }
+        function:void Test()
+        {
+            Console.WriteLine("Named: ${Named}, Age: ${Age}")
+        }
+    }
+
+    [static] function:void Main()
+    {
+        var example = new SectionExample()
+        example.Age = 42
+        example.Test()
+    }
+}

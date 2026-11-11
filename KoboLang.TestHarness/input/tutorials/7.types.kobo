@@ -1,0 +1,219 @@
+###
+# Types in Kobo
+This sample leverages kobo compilation cabapilities.  You won't need to have the script tag at the top 
+of your program. Build this sample with the command and run it using ```dotnet```.
+```kobo build --source 7.0.types.kobo```
+
+---
+Kobo supports all the common .NET types with a strong focus on creating the types without uneccessary boilerplate.
+
+The following code creates a tuple
+###
+
+function:void Main(string[] args)
+{
+    //tuples
+    var:(int,int) tuple = (10,10)
+
+    var:Lawyer jim = new("Barister")
+    var bob = new Lawyer("Judge")
+
+###
+Similar to tuple, unions are created as part of the declaration.  No need to define a separate type, the union just is.
+###
+
+    //unions
+    var:union(int,string) my_union = "one"
+    Console.WriteLine(my_union)
+
+}
+
+###
+And here is how a delegate is created
+###
+
+//delegate
+[public]
+delegate:(int x)->void SampleHandler
+
+
+###
+Enums, structs, records and interfaces are created using the same common pattern
+###
+
+[public]
+enum:Color
+{
+    Red,
+    Green = 7,
+    Blue
+}
+
+//declare a record
+record:PersonRecord(string name, string age)
+
+
+//declare a struct
+[public]
+struct:PersonStruct
+{
+}
+
+//declare an interface
+[public]
+interface:PersonInterface
+{
+    function:string GetJob()
+}
+
+###
+Classes are also created the same way.  Classes can inherit from interfaces or other classes using the *is* keyword
+as shown below.  The same modifier pattern applies to classes as well, specify modifer or attribute in the square brackets.
+PersonBase in this sample is abstract - so it cannot be directly instantiated.
+###
+[abstract, public]
+class:PersonBase is PersonInterface
+{
+    [protected, internal]
+    var:string _job = "No Job"
+
+###
+Defining a virtual method in a class
+###
+    [public,virtual]
+    function:string GetJob()
+    {
+        return "No Job"
+    }
+}
+
+###
+All classes have a special method called ```new```.  new is used to istantiate a new intance of the type.
+```var:Laywer john = **new** Lawyer("john")```.  This corresponds to the new keyword used when instantiating.
+
+The following code showcases an inheritance hiearchy with PersonBase, Lawyer and other types.
+###
+
+[public]
+class:Lawyer is PersonBase
+{
+    [public]
+    event:SampleHandler JobRequested
+
+    [public]
+    new(string job)
+    {
+        parent._job = job
+    }
+
+    [public,override] 
+    function:string GetJob()
+    {
+        JobRequested?.Invoke(5)
+        return "Law"
+    }
+}
+
+
+[public]
+class:PilotClass is PersonBase
+{
+###
+Even with a class fields must be instantiated
+###
+    //fields 
+    var:string _internal_name = "unknown"
+    var:string[] _locations = ["nigeria","jamaica","south africa","congo"]
+
+###
+Properties are defined with the **property** keyword, like class, function, struct,and all the other kinds of things that can 
+be created.
+###
+    //property
+    [public] 
+    property:int Age
+
+    [public] 
+    property:int BirthYear {get;}
+
+###
+Indexers can be created in two ways, standard with the *this* keyword or named
+###
+    //default indexer
+    [public] 
+    indexer:string this[int i]
+    {
+        get{
+            return _locations[i]
+        }
+    }
+
+    //named indexer
+    [public] 
+    indexer:string Location[int i]
+    {
+        get{
+            return _locations[i]
+        }
+    }
+
+###
+kobo supports polymorphism via the ovrride and virtual keywords
+###
+    [public,override] 
+    function:string GetJob()
+    {
+        return "Fly"
+    }
+    
+}
+
+###
+Custom attributes can be defined and added to the modifier list like any other attribute or modifier
+###
+//creating your own attributes
+[ AttributeUsage(AttributeTargets.Class)]
+class:simpleAttribute is Attribute
+{
+
+}
+
+//using a custom attribute
+[simple] class:Policeman is PersonBase
+{
+    [public,override] 
+    function:string GetJob()
+    {
+        return "Harrass the dissenfranchised"
+    }
+}
+
+###
+Parent->Child constructors can be called using the *calls* keyword from the child's costructor
+###
+
+
+
+
+//calling parent constructor
+[public]
+class:Parent
+{
+    [protected] var:string _name = "idk"
+
+    [public]
+    new(string name)
+    {
+        _name = name
+    }
+}
+
+[public]
+class:Child is Parent
+{
+    [public]
+    new(string child) calls parent(child)
+    {
+        
+    }
+}

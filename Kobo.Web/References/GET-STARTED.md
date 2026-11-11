@@ -1,6 +1,6 @@
 # Get Started with Kobo
 
-## Language version 0.1.47
+## Language version 0.1.53
 
 Kobo lets you build standalone .NET programs, add Kobo source files to an
 existing .NET project, or keep a small utility and its settings in one file.
@@ -27,7 +27,7 @@ packages rather than a published feed, see
 
 ### Optional: set up VS Code
 
-Install the **Kobo** extension, published by **thinkmine**, for `.kobo`
+Install the **Kobo** extension, published by **thinkmine**, for `.kobo` and `.kb`
 highlighting and language-server support. If installing a locally packaged
 extension, open the Command Palette, choose **Extensions: Install from VSIX...**,
 and select the Kobo VSIX.
@@ -94,7 +94,7 @@ Here is what the program declares:
 ### Build and run
 
 ```sh
-kobo build hello.kobo --output-directory ./build --name Hello
+kobo build --source hello.kobo --output-directory ./build --name Hello
 dotnet ./build/Hello.dll
 ```
 
@@ -112,16 +112,16 @@ Keep both when running this standalone executable.
 To compile all Kobo files directly in the current folder together:
 
 ```sh
-kobo build --output-directory ./build --name Hello
+kobo build --source . --output-directory ./build --name Hello
 ```
 
 To include Kobo files in subfolders:
 
 ```sh
-kobo build --recursive --output-directory ./build --name Hello
+kobo build --source . --recursive --output-directory ./build --name Hello
 ```
 
-You can also select a folder explicitly with `kobo build ./src --recursive`.
+Pass any other folder to `--source`, for example `kobo build --source ./src --recursive`.
 Folder builds produce one assembly, not one assembly per file. Recursive
 discovery skips `bin`, `obj`, and symbolic-link directories.
 
@@ -215,7 +215,7 @@ import * from System
 ### Build and pass script arguments
 
 ```sh
-kobo build greet.kobo --output-directory ./build --name Greet
+kobo build --source greet.kobo --output-directory ./build --name Greet
 dotnet ./build/Greet.dll Ada
 ```
 
@@ -268,9 +268,9 @@ does not add an assembly reference.
 
 | Goal | Workflow |
 | --- | --- |
-| Build a standalone Kobo program | `kobo build file.kobo` |
-| Compile a folder of Kobo files together | `kobo build ./src` |
-| Include nested source folders | `kobo build ./src --recursive` |
+| Build a standalone Kobo program | `kobo build --source file.kobo` |
+| Compile a folder of Kobo files together | `kobo build --source ./src` |
+| Include nested source folders | `kobo build --source ./src --recursive` |
 | Use Kobo files in a .NET project | Install BuildTools and use the project's normal workflow |
 | Keep a utility and dependencies in one file | Use app directives and the single-file build/run workflow |
 
@@ -279,7 +279,7 @@ control flow, type extensions, classes, inheritance, lambdas, queries, native
 JSON, and typed AI prompts. For hands-on examples, see the
 [console tutorial](https://github.com/thinkmine/Kobo/blob/master/KoboLang.TestHarness/input/tutorials/1.variables.kobo),
 [string tutorial](https://github.com/thinkmine/Kobo/blob/master/KoboLang.TestHarness/input/tutorials/2.strings.kobo), and
-[AI tutorial](https://github.com/thinkmine/Kobo/blob/master/KoboLang.TestHarness/input/tutorials/11.ai.kobo). The AI tutorial
+[AI tutorial](https://github.com/thinkmine/Kobo/blob/master/KoboLang.TestHarness/input/tutorials/12.ai.kobo). The AI tutorial
 uses an adjacent `kobo.ai.json` with an environment-supplied API key.
 See the [compiler guide](https://github.com/thinkmine/Kobo/blob/master/Kobo.Lang.Compiler/README.md) for installation and
 command-line details, or the [VS Code guide](https://github.com/thinkmine/Kobo/blob/master/Kobo.Lang.VSCode/README.md) for

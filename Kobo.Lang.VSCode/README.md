@@ -1,12 +1,12 @@
 # Kobo Language Support
 
-## Extension version 0.1.47 (Kobo language 0.1.47)
+## Extension version 0.1.53 (Kobo language 0.1.53)
 
-Kobo Language Support brings `.kobo` language support to Visual Studio Code. It starts the Kobo language server to provide semantic syntax highlighting and diagnostics for Kobo source files. The language server reports transform errors and unresolved names (including undeclared variables) in the editor. Name analysis uses the current file and available runtime references, not the complete consuming project; the full build resolves cross-file/project references. This extension does not build or run your program.
+Kobo Language Support brings `.kobo` and `.kb` language support to Visual Studio Code. It starts the Kobo language server to provide semantic syntax highlighting and diagnostics for Kobo source files. The language server reports transform errors and unresolved names (including undeclared variables) in the editor. Name analysis uses the current file and available runtime references, not the complete consuming project; the full build resolves cross-file/project references. This extension does not build or run your program.
 
 Completion suggests Kobo keywords and declarations, locals, members of imported
 .NET types (including generic types and extension methods), namespace and type
-import paths, and declarations in other `.kobo` files in the workspace.
+import paths, and declarations in other Kobo files in the workspace.
 Unsaved open files are included. In prompt bodies, completion is limited to
 Kobo expressions inside `${...}`; surrounding prompt text remains plain text.
 For suggestions from project-specific references, check the consuming
@@ -21,7 +21,7 @@ The extension launches the language server with `dotnet`. If `dotnet` is not on 
 
 ## Getting started
 
-Open or create a file with the `.kobo` extension. VS Code activates Kobo language support for that file. Errors reported by the language server appear in the editor and the Problems panel. For server startup or runtime details, open **View → Output** and select **Kobo Language Server**.
+Open or create a file with the `.kobo` or `.kb` extension. VS Code activates Kobo language support for that file. Errors reported by the language server appear in the editor and the Problems panel. For server startup or runtime details, open **View → Output** and select **Kobo Language Server**.
 
 ## Building Kobo code
 
@@ -32,16 +32,16 @@ For standalone assemblies, install the CLI:
 
 ```sh
 dotnet tool install --global thinkmine.kobo.lang --prerelease
-kobo build
+kobo build --source .
 ```
 
-`kobo build` builds the current folder. Supply a file or folder path to select
-another input, and use `--recursive` only with folder builds:
+`--source` is required and selects the file or folder to build (`.` is the
+current folder). Use `--recursive` only with folder builds:
 
 ```sh
-kobo build ./main.kobo
-kobo build ./src
-kobo build ./src --recursive --output-directory ./build --name MyApp --publish-code
+kobo build --source ./main.kobo
+kobo build --source ./src
+kobo build --source ./src --recursive --output-directory ./build --name MyApp --publish-code
 ```
 
 Folder builds produce one assembly from the discovered Kobo files, sharing
@@ -96,6 +96,7 @@ Some core syntax:
 - **JSON:** `json` supports property and indexer access. Native JSON objects accept Kobo expressions as values and `${expression}` in quoted keys or values. `StringValue` returns JSON text, and implicit conversions between `json` and `string` parse or serialize it. Invalid JSON text throws `JsonException`.
 - **Verbatim and raw strings:** `@"..."` and `"""..."""` are not Kobo syntax and are reported as errors. `verbatim "..."` keeps its text exactly, with no escapes or `${...}` interpolation (write `""` for a quote). `raw "..."` ignores escapes but still interpolates `${...}`; a multi-line `raw` string removes the closing quote's indentation. Both may span lines, and the keyword is highlighted only when it precedes a string.
 - **Prompts and tools:** `prompt:Type name { ... }` requests a typed AI result or its original text. Only `${expression}` is evaluated in the otherwise plain-text prompt body. `[tool]` exposes eligible functions. See the [AI tutorial](https://github.com/thinkmine/Kobo/blob/master/KoboLang.TestHarness/input/tutorials/11.ai.kobo).
+- **Render blocks:** In a script file, a top-level `render:<language> { ... }` block writes its printed output into the generated Markdown as a fenced block when using `--markdown` or `kobo generate`; normal runs skip it. `render` is highlighted as a keyword only on a block's header line.
 - **Catch declarations:** Parentheses are optional: `catch Exception error` or
   `catch Exception`. Bare `catch` and parenthesized forms remain supported.
   Catch bodies use braces; `when` filter conditions retain parentheses.

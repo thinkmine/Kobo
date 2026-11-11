@@ -1,6 +1,6 @@
 # Imports and fully qualified type replacement in Kobo
 
-## Language version 0.1.47
+## Language version 0.1.53
 
 Kobo separates two operations:
 
@@ -180,7 +180,7 @@ var json = JsonConvert.SerializeObject(new { Name = "Ada" })
 Console.WriteLine(json)
 ```
 
-Run with `kobo run example.kobo`. In a .NET project using BuildTools, use a project
+Run with `kobo run --source example.kobo`. In a .NET project using BuildTools, use a project
 `PackageReference`. Framework namespaces need no additional package directive.
 
 CLI builds, BuildTools, and the language server use the same syntax.

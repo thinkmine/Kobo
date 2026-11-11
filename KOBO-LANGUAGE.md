@@ -1,8 +1,8 @@
 # The Kobo Programming Language
 
-## Language version 0.1.47
+## Language version 0.1.53
 
-This specification describes Kobo source as accepted by the version 0.1.47
+This specification describes Kobo source as accepted by the version 0.1.53
 compiler and runtime. Examples are Kobo unless marked as configuration or
 console output. Language syntax, type rules, runtime behavior, errors, and
 tooling limits are described separately; examples do not grant forms that
@@ -39,11 +39,13 @@ and modifiers precede declarations in square brackets.
 
 Braces delimit statement blocks and type bodies. Ordinary single-line
 statements may omit their final semicolon; multiline query statements must
-end with one. `//` starts a line comment; `/* ... */` encloses a block
+end with one. Source files may use the `.kobo` or `.kb` extension. `//` starts
+a line comment; `/* ... */` encloses a block
 comment. A line containing only `###` starts or ends a Markdown comment block;
 the block may continue to the end of the file. Markdown comment blocks are
-ignored as Kobo source and can contain prose and other Markdown. During
-compilation, when at least one such block is present, the compiler also writes
+ignored as Kobo source and can contain prose and other Markdown. When
+`--markdown` is passed to `kobo build` or `kobo run` (or when using
+`kobo generate`) and at least one such block is present, the compiler also writes
 a `.kobo.md` file containing the Markdown blocks as Markdown and the code
 outside them in fenced `kobo` code blocks. String literals use quotes.
 Within a Markdown comment block, `\###` is an escaped heading marker: it
@@ -55,6 +57,8 @@ documented under [native AI prompts](#native-ai-prompts).
 
 Local `var` uses its initializer to infer a type. Explicit annotations are
 available for variables, fields, parameters, members, and return values.
+Typed fields may omit an initializer and receive their type's default value;
+locals and `readonly` fields still require an initializer.
 `?`, `?.`, and `??` handle nullable values. `union(T,U)` is permitted as a
 variable type and preserves the declared case order. At a public API boundary,
 ensure types are accessible from the consuming module. Name resolution,
@@ -91,7 +95,7 @@ Install the command-line compiler with the .NET 11 SDK:
 
 ```sh
 dotnet tool install --global thinkmine.kobo.lang --prerelease
-kobo build hello.kobo --output-directory ./build --name Hello
+kobo build --source hello.kobo --output-directory ./build --name Hello
 dotnet ./build/Hello.dll
 ```
 
@@ -215,7 +219,7 @@ count += 1;
 ```
 
 Markdown comments can document a Kobo source file and produce a Markdown
-companion when compiled:
+companion when compiled with `--markdown` or generated with `kobo generate`:
 
 ```kobo
 ###
@@ -236,6 +240,59 @@ whitespace is allowed). Each delimiter toggles between Kobo source and
 Markdown; an unmatched opening delimiter comments out everything through
 end of file. Markdown comment text is excluded from Kobo transformation and
 compiled code.
+
+#### Render blocks
+
+A Kobo script (a file whose first statement is `#:script`) can generate part of
+its Markdown companion with a `render` block. The block's console output, not its
+source, appears in the document as a fenced code block. Use
+`render:<language>` to set the fence language:
+
+```kobo
+#:script
+
+function:string Edge(string from, string to)
+{
+    return "    " + from + " --> " + to
+}
+
+render:mermaid {
+    Print("graph TD")
+    Print(Edge("A", "B"))
+}
+```
+
+The generated Markdown shows the function as a fenced `kobo` block, followed by
+the block's output in place of the block itself:
+
+````markdown
+```mermaid
+graph TD
+    A --> B
+```
+````
+
+Render blocks run only when Markdown is generated (`--markdown` or
+`kobo generate`). Running or building the script without `--markdown` skips
+them entirely; they never affect the program. When Markdown is generated, the
+render blocks run as their own small program, in source order, apart from the
+rest of the script. That program contains the script's imports, app
+directives, types, functions, and `const` values, but none of its other
+top-level statements. A render block can therefore call the script's functions
+and use its types and constants, but not its top-level variables; declare any
+data the block needs inside the block or in a function. In a folder build, a
+block can also use types from the other Kobo files in the build.
+
+Everything a block writes with `Print` or `Console.WriteLine` (including
+output from functions it calls) is captured. A block that writes nothing adds
+nothing to the document. Console input is unavailable: `Input()` inside a
+render block fails. A block that fails to compile or throws an exception stops
+Markdown generation with an error.
+
+A `render` block must be a top-level statement in a script file. Its opening
+`{` goes at the end of the `render` line or on the next line, and code after
+its closing `}` must start on a new line. `render` is a keyword only at the start
+of such a block, so it can still be used as an identifier.
 
 Semicolons are optional for ordinary single-line statements. Open parentheses
 and brackets, trailing operators, and leading continuation operators can extend
@@ -506,7 +563,8 @@ its body on the same line require parentheses:
 if (score < 0) return
 ```
 
-Switch statements select among cases:
+Switch statements select among cases. Parentheses around the switch value are
+optional:
 
 ```kobo
 switch (command)
@@ -516,6 +574,13 @@ switch (command)
         break
     default:
         Console.WriteLine("Unknown command")
+        break
+}
+
+switch command
+{
+    case "stop":
+        Console.WriteLine("Stopping")
         break
 }
 ```
@@ -862,6 +927,26 @@ class:OldService
 
 Import `System` for `Obsolete`.
 
+A declaration section may appear wherever a modifier or attribute list is
+valid. Its list is applied to every declaration directly inside the block:
+
+```kobo
+[public] class:Person
+{
+    [public]
+    {
+        var:int Named
+        property:int Age { get; set; }
+    }
+}
+```
+
+Each member receives the section's attributes and modifiers in addition to
+its own declaration list. Sections may be nested where declaration lists are
+valid. A section can contain declarations only; it cannot be used in a
+parameter list, getter or setter, or inline lambda. Applying a list that is
+not valid for a contained declaration is an error.
+
 ### Partner classes
 
 Mark a class `[partner]` and list it with `partners` on each collaborator. A
@@ -1130,30 +1215,30 @@ and optional statement semicolons. The operator must have the proper number
 of operands, involve its containing type, and obey paired-operator and
 conversion rules. Operators cannot be declared globally or inside functions.
 
-### Native extern functions
+### Native external functions
 
-Declare native library functions with `extern:ReturnType Name(parameters)`.
+Declare native library functions with
+`external:ReturnType Name(parameters)`.
 The modifier/attribute list must contain exactly one `source("library")`, which
-generates `[DllImport("library")]`. Kobo always generates `static extern` and
-adds `using System.Runtime.InteropServices;` when an extern declaration is used.
-Multiline parameter lists and an optional terminating semicolon are supported.
-Extern functions cannot have bodies or generic type parameters.
+identifies the native library. Multiline parameter lists and an optional
+terminating semicolon are supported. External functions cannot have bodies or
+generic type parameters. The declaration keyword is `external`; `extern` is no
+longer accepted.
 
 ```kobo
 import * from System
 
 [public, source("user32.dll")]
-extern:int MessageBoxW(IntPtr hWnd,
+external:int MessageBoxW(IntPtr hWnd,
     string text,
     string caption,
     uint type)
 ```
 
-This generates a public static extern method with `[DllImport("user32.dll")]`
-and a terminating semicolon. Global extern functions follow normal global
-function access and name-uniqueness rules; extern type members follow normal
-member access rules. `[source("library"), extern] function:...` is also supported.
-The library must be available on the target platform when the method is called.
+Global external functions follow normal global function access and
+name-uniqueness rules; external type members follow normal member access rules.
+`[source("library"), external] function:...` is also supported. The library
+must be available on the target platform when the method is called.
 
 ### Type extensions
 
@@ -1289,6 +1374,8 @@ expression with `|` and a result step to produce a different result:
 | `\| sum` | The total of numeric results |
 | `\| min` | The smallest result |
 | `\| max` | The largest result |
+| `\| range` | The difference between the largest and smallest results |
+| `\| aggregate(accumulator)` | Accumulates the projected values |
 | `\| average(selector)` | The average of the selector's numeric values |
 | `\| min(selector)` | The smallest value the selector returns |
 | `\| max(selector)` | The largest value the selector returns |
@@ -1304,6 +1391,8 @@ var average_age = select p from people
                       where p.Age > 25
                       project p.Age | average;
 var youngest = select p from people project p.Age | min
+var total_age = select p from people project p.Age | aggregate((total, age) => total + age)
+var age_range = select p from people project p.Age | range
 ```
 
 `average` and `sum` require a numeric projection, such as `p.Age` or
@@ -1321,11 +1410,13 @@ var average_age = select p from people project p | average(p => p.Age)
 A selector is a single lambda (or delegate) applied to each projected result.
 The step returns the selected value, not the item: `| min(p => p.Length)` is
 the length of the shortest name. An `average` selector must return a number.
-Only `average`, `min`, and `max` accept a selector; `list`, `first`, `last`,
-`count`, and `sum` take no arguments. `sum` of an empty query is
-`0`. `average`, `min`, and `max` of an empty query of numbers fail at run time
-with `InvalidOperationException`, so check `| count` first when a query may have
-no results.
+`aggregate` requires an accumulator lambda and can also take a seed and result
+selector, following the available LINQ overloads. `range` requires ordered
+numeric values and returns the maximum minus the minimum. Only `average`,
+`min`, and `max` accept selectors; `list`, `first`, `last`, `count`, and `sum`
+take no arguments. `sum` of an empty query is `0`. `average`, `min`, `max`,
+and `range` fail at run time for empty queries, so check `| count` first when
+a query may have no results.
 
 A step applies after paging, so `skip 10 take 5 ... project item | count`
 counts at most five results. A query that spans lines ends with `;`, and the
@@ -1412,7 +1503,7 @@ without requiring the caller's thread to block for the duration.
 ### Single-file programs
 
 ```sh
-kobo build hello.kobo
+kobo build --source hello.kobo
 dotnet hello.dll
 ```
 
@@ -1457,7 +1548,7 @@ module Examples/Greetings
 Build the folder into one assembly:
 
 ```sh
-kobo build ./GreetingApp --output-directory ./build --name Greetings
+kobo build --source ./GreetingApp --output-directory ./build --name Greetings
 dotnet ./build/Greetings.dll
 ```
 
@@ -1481,34 +1572,54 @@ GreetingApp/
 Build the tree recursively:
 
 ```sh
-kobo build ./GreetingApp --recursive --output-directory ./build --name Greetings
+kobo build --source ./GreetingApp --recursive --output-directory ./build --name Greetings
 ```
 
 Without `--recursive`, only the selected folder's immediate files are included.
 Recursive discovery skips `bin`, `obj`, and symbolic-link directories.
-Extensions are matched case-insensitively and files are processed in ordinal
+`.kobo` and `.kb` extensions are matched case-insensitively and files are processed in ordinal
 path order. Folder structure does not declare modules automatically.
 
-With no input path, `kobo build` selects the current folder:
+`--source` is required for `kobo build`, `kobo run`, and `kobo generate`; it
+names the file or folder to use, and Kobo does not compile or run anything
+without it. Use `--source .` for the current folder:
 
 ```sh
-kobo build
-kobo build --recursive
+kobo build --source .
+kobo build --source . --recursive
 ```
+
+`--source` can appear anywhere among the other options.
 
 When supplying both output options, place `--output-directory` before `--name`.
 Quote paths containing spaces. An empty discovery result or failed compilation
 is an error. `--recursive` is not valid with a single-file input.
 
-If a compiled source or a file run with `kobo run` contains a Markdown comment
-block, the compiler writes `<filename>.kobo.md` next to that source's output.
-Markdown is extracted before Kobo code is transformed, so it is still written
-when the remaining Kobo code has a compilation error. Use
+Markdown companions are opt-in. Add `--markdown` to `kobo build` or `kobo run`
+to write Markdown companions; without the
+option, no Markdown file is written. With no path, `--markdown` writes
+`<filename>.kobo.md` or `<filename>.kb.md` (for example, `test.kobo` produces
+`test.kobo.md`) next to that source's output. Markdown is extracted before Kobo code is transformed, so
+it is still written when the remaining Kobo code has a compilation error. Use
 `--markdown <relative-path>` to choose a different Markdown output path for a
-single-file build; it is relative to the output directory. For a folder build,
-the option names a relative output directory, and each generated
-`<filename>.kobo.md` retains its source-relative path beneath that directory.
-Sources without Markdown comment blocks do not produce Markdown files.
+single file; for `kobo build` it is relative to the output directory, and for
+`kobo run` it is relative to the source folder. For a folder build, the path
+must be a folder, and each source produces a Markdown companion there, retaining
+its source-relative path and extension (for example, `plain.kb.md`). Source
+code outside Markdown comment blocks is included in fenced `kobo` blocks, so a
+companion is also written for sources without Markdown comment blocks.
+
+To write only the Markdown companion, without compiling or running the file,
+use `kobo generate`. Its `--markdown` option is required and must name the
+target Markdown file, relative to the source folder:
+
+```sh
+kobo generate --source app.kobo --markdown output.md
+```
+
+`--publish-code` saves the compiler source listing. With `kobo build` it is
+written to the output directory; with `kobo run` it is written next to the
+script as `<name>.cs`.
 
 ### Single-file application directives
 
@@ -1535,7 +1646,7 @@ import * from Newtonsoft/Json
 Build and run it with the same single-file workflow:
 
 ```sh
-kobo build app.kobo --output-directory ./build --name App
+kobo build --source app.kobo --output-directory ./build --name App
 dotnet ./build/App.dll
 ```
 
@@ -1548,10 +1659,10 @@ dotnet ./build/App.dll
 
 Use `#:script` to enable top-level Kobo statements in one source file.
 The former `#:app` marker is no longer accepted. To execute a file directly,
-place `#:script` as the first statement and use `kobo run path/to/file.kobo`.
+place `#:script` as the first statement and use `kobo run --source path/to/file.kobo`.
 Whitespace and Markdown comment blocks may precede the directive; they are
-ignored while the script is identified and executed, and Markdown is written to
-the companion file. No other Kobo statements may appear before `#:script`.
+ignored while the script is identified and executed. Add `--markdown` to also
+write the Markdown companion. No other Kobo statements may appear before `#:script`.
 This requires the .NET 11 SDK: Kobo compiles and launches
 `dotnet run --file`, forwarding console I/O and the application exit code.
 Place it before Kobo code; it takes no value. Top-level variables become local
@@ -1560,13 +1671,15 @@ those variables. These functions are not emitted in the generated `Global`
 class. Type declarations remain ordinary top-level Kobo types.
 
 To pass command-line arguments, use
-`kobo run path/to/file.kobo -- Ada "two words" --verbose`.
+`kobo run --source path/to/file.kobo -- Ada "two words" --verbose`.
 The required `--` separator is consumed by Kobo; everything after it is
 available unchanged in the script's top-level `string[] args` array, including
 empty quoted strings and values beginning with `-`. For this command,
 `args[0]` is `"Ada"`, `args[1]` is `"two words"`, and `args[2]` is
 `"--verbose"`. With no arguments, or just a trailing `--`, `args` is empty.
-Additional arguments without the separator are rejected.
+Additional arguments without the separator are rejected. The `--markdown` and
+`--publish-code` options go before the separator:
+`kobo run --source path/to/file.kobo --markdown --publish-code -- Ada`.
 
 ```kobo
 #:script
@@ -1788,7 +1901,7 @@ stable Azure 2.1 adapter is binary-incompatible with that combination.
 
 A complete local-provider example is in
 [`samples/native-ai`](samples/native-ai). Build it with
-`kobo build samples/native-ai/main.kobo --output-directory ./build --name NativeAI`.
+`kobo build --source samples/native-ai/main.kobo --output-directory ./build --name NativeAI`.
 Run `dotnet ./build/NativeAI.dll` with Ollama running and `llama3.2` installed.
 
 #### Referencing .NET libraries
@@ -1848,7 +1961,7 @@ assembly to be produced in the selected output directory.
 
 ### Kobo files in a .NET project
 
-BuildTools discovers `.kobo` files in an SDK-style .NET project and includes
+BuildTools discovers `.kobo` and `.kb` files in an SDK-style .NET project and includes
 their public declarations in its assembly. A project can contain multiple
 Kobo modules, use referenced .NET libraries, and configure its dependencies,
 build properties, and SDK in the project. BuildTools discovers nested Kobo
@@ -1884,7 +1997,7 @@ references, SDK selection, and build properties in the containing project.
 Standalone app directives such as `#:package` are not accepted in these
 files; `#:script` can mark one file for top-level statements. The Kobo VS
 Code extension provides highlighting, diagnostics, and completion for Kobo
-declarations, available .NET members, and symbols in other workspace `.kobo`
+declarations, available .NET members, and symbols in other workspace `.kobo` and `.kb`
 files, including unsaved open documents. Within prompt bodies, only
 `${expression}` receives expression completion; surrounding text remains plain.
 The language server does not load the consuming project's dependency graph,

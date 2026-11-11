@@ -2,7 +2,7 @@
 
 # Kobo
 
-## Language version 0.1.47
+## Language version 0.1.53
 
 Kobo is an AI-conscious, general-purpose programming language built for the
 .NET ecosystem. Designed from the ground up with both human developers and AI
@@ -20,7 +20,7 @@ the libraries and types available to .NET applications.
 
 ## How Kobo works
 
-Kobo source files use the `.kobo` extension. The compiler builds them into
+Kobo source files use the `.kobo` or `.kb` extension. The compiler builds them into
 standard .NET assemblies, so programs can run with the .NET runtime and use
 the .NET libraries. You can build one file or compile a directory of Kobo
 files together into a single assembly.

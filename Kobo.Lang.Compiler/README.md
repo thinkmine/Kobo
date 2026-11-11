@@ -1,6 +1,6 @@
 # Kobo command-line compiler
 
-## Language version 0.1.47
+## Language version 0.1.53
 
 **NuGet package:** `thinkmine.kobo.lang`
 
@@ -8,7 +8,8 @@
 
 Kobo is a compact, modern language for writing .NET code. Its declarations,
 optional semicolons, delegate shorthand, and trailing lambdas are compiled into
-one .NET assembly from a single `.kobo` source file or a folder of Kobo files.
+one .NET assembly from a single `.kobo` or `.kb` source file or a folder of
+Kobo files.
 
 This package is a preview. The NuGet package ID is separate from the command name: install `thinkmine.kobo.lang`, then invoke `kobo`.
 
@@ -31,7 +32,7 @@ For a repository-local tool installation:
 ```sh
 dotnet new tool-manifest
 dotnet tool install thinkmine.kobo.lang --prerelease
-dotnet tool run kobo build hello.kobo
+dotnet tool run kobo build --source hello.kobo
 ```
 
 Create the tool manifest only if the repository does not already have one. Restore tools in an existing checkout with `dotnet tool restore`. These installation commands require the package to be available from a configured NuGet source.
@@ -52,13 +53,13 @@ Console.WriteLine("Hello from Kobo!")
 Run it directly with the .NET 11 SDK:
 
 ```sh
-kobo run hello.kobo
+kobo run --source hello.kobo
 ```
 
 Pass application arguments after the required `--` separator:
 
 ```sh
-kobo run hello.kobo -- Ada "two words" --verbose
+kobo run --source hello.kobo -- Ada "two words" --verbose
 ```
 
 Scripts access these values through the top-level `string[] args` array:
@@ -68,9 +69,21 @@ all subsequent values, including option-like values and empty quoted strings,
 are forwarded unchanged. With no arguments (or just a trailing `--`), `args`
 is empty. Additional arguments without `--` are rejected.
 
-`kobo run` preprocesses the source, writes a Markdown companion when comment
-blocks are present, then compiles and executes the remaining code. It requires
-a single `.kobo` file with `#:script` as its first statement. Whitespace and
+Run options go before the separator:
+
+```sh
+kobo run --source hello.kobo --markdown --publish-code -- Ada
+```
+
+`--markdown [<relative-path>]` writes the Markdown companion (default
+`hello.kobo.md` or `hello.kb.md` next to the script; a path is relative to the script folder).
+`--publish-code` saves the compiler source listing next to the script as
+`hello.cs`. Without these options, neither file is written.
+
+`kobo run` preprocesses the source, writes a Markdown companion when
+`--markdown` is given and comment blocks are present, then compiles and
+executes the remaining code. It requires
+a single `.kobo` or `.kb` file with `#:script` as its first statement. Whitespace and
 Markdown comment blocks may precede it, but no other Kobo statements. The old
 `#:app` marker is rejected.
 SDK, property, and package directives are preserved. Native AI scripts receive
@@ -104,7 +117,7 @@ module Examples/Hello
 Build and run:
 
 ```sh
-kobo build hello.kobo --output-directory ./build --name Hello
+kobo build --source hello.kobo --output-directory ./build --name Hello
 dotnet ./build/Hello.dll
 ```
 
@@ -113,7 +126,9 @@ The compiler writes `Hello.dll` and, for a console application, `Hello.runtimeco
 ### Compiler options
 
 ```text
-kobo build [<input.kobo>|<folder>] [--recursive] [--output-directory <directory>] [--name <assembly-name>] [--publish-code] [--markdown <relative-path>]
+kobo run --source <input.kobo|input.kb> [--markdown [<relative-path>]] [--publish-code] [-- <arguments>...]
+kobo build --source <input.kobo|input.kb>|<folder> [--recursive] [--output-directory <directory>] [--name <assembly-name>] [--markdown [<relative-path-or-folder>]] [--publish-code]
+kobo generate --source <input.kobo|input.kb> --markdown <relative-path>
 kobo --version
 ```
 
@@ -121,28 +136,63 @@ Run `kobo --version` by itself to print the compiler's NuGet package version.
 
 | Option | Behavior |
 | --- | --- |
-| `<input.kobo>` or `<folder>` | Builds one file or all Kobo files in a folder. With no input, builds the current directory. Quote paths containing spaces. |
+| `--source <input.kobo|input.kb>` or `--source <folder>` | Required for `run`, `build`, and `generate`. Selects the file (or, for `build`, the folder of Kobo files) to use; use `--source .` for the current directory. Commands without it are rejected. Quote paths containing spaces. |
 | `--recursive` | Includes subfolders in directory builds. Not valid for a file input. |
 | `--output-directory <directory>` | Writes output to this directory, creating it if needed. Defaults to the input file's directory or the folder being built. |
 | `--name <assembly-name>` | Sets the output assembly name. Defaults to the input filename without its extension, or the folder name. |
 | `--publish-code` | Also saves a compiler source listing. |
-| `--markdown <relative-path>` | Writes the generated Markdown companion to a relative path. For a single-file build this is the output filename; for a folder build it is an output directory containing one source-relative `.kobo.md` file per documented source. |
+| `--markdown [<relative-path-or-folder>]` | Writes Markdown companions. Without a path, a single file `test.kobo` produces `test.kobo.md`; a folder build writes one `.md` companion per source into the output directory. With a path, a single-file build uses it as the output filename; a folder build requires a folder target and preserves source-relative paths there. Folder builds include a fenced Kobo listing for sources without Markdown comment blocks. Without `--markdown`, no Markdown is written. |
 
-When using both named options, put `--output-directory` before `--name`, as shown above; this matches the current CLI command patterns. The `--publish-code` and `--markdown` flags can accompany any build command.
+When using both named options, put `--output-directory` before `--name`, as shown above; this matches the current CLI command patterns. The `--source`, `--publish-code`, and `--markdown` flags can appear anywhere after the command. When `--markdown` has no path, follow it with another option (or put it last) so the next value is not read as the Markdown path. `kobo build` does not accept `--` program arguments.
 
 A line containing only `###` toggles between Kobo source and Markdown comment
 text. An unmatched opening marker comments through end of file. Compiling a
-file with at least one marker writes `<filename>.kobo.md` next to the compiler
-output; text outside Markdown blocks is wrapped in fenced `kobo` code blocks.
+file with at least one marker and `--markdown` writes `<filename>.kobo.md` or
+`<filename>.kb.md` next to the compiler output; text outside Markdown blocks is wrapped in fenced
+`kobo` code blocks.
 Within a Markdown block, escape `###` as `\###` to include it in the document;
 the generated Markdown drops the backslash.
-No Markdown companion is written when the source has no Markdown block.
+For folder builds, a companion is written for every source file, including
+files without Markdown comment blocks.
 
-For example, `kobo build hello.kobo --markdown docs/hello.md` writes the
+For example, `kobo build --source hello.kobo --markdown docs/hello.md` writes the
 single-file companion to `docs/hello.md` relative to the compiler output
 directory. With a folder build, `--markdown docs` is the output directory;
 each source's relative path is preserved beneath it to avoid filename
 collisions.
+
+### Generating Markdown only
+
+```sh
+kobo generate --source app.kobo --markdown output.md
+```
+
+`kobo generate` writes only the Markdown companion of a single `.kobo` or `.kb` file,
+without building or running the program. `--markdown` is required and must name the
+target file, relative to the source folder. A source without Markdown comment
+or render blocks is reported as an error (exit code `1`).
+
+### Render blocks
+
+In a script file (first statement `#:script`), a top-level
+`render[:<language>] { ... }` block adds its console output to the Markdown
+companion as a fenced code block in place of its source:
+
+```kobo
+render:mermaid {
+    Print("graph TD")
+    Print("    A --> B")
+}
+```
+
+Render blocks run only when Markdown is generated (`--markdown` or
+`kobo generate`); normal `run` and `build` skip them. They run as their own
+small program, in source order, apart from the rest of the script. That
+program contains the script's imports, app directives, types, functions, and
+`const` values but no other top-level statements, so blocks cannot use
+top-level variables. Blocks that print nothing are omitted. `Input()` fails
+inside a render block. A render block that fails to compile or throws stops
+Markdown generation with exit code `1`.
 
 The compiler emits a console application when a static `Main` method is present,
 and a library otherwise. Use a supported Kobo entry-point signature such as
@@ -152,37 +202,37 @@ On successful compilation, the CLI reports whether it produced a console applica
 
 ### Building a folder
 
-Build all `.kobo` files directly inside a folder into **one assembly**:
+Build all `.kobo` and `.kb` files directly inside a folder into **one assembly**:
 
 ```sh
-kobo build ./src
+kobo build --source ./src
 ```
 
 The same `build` command handles file paths and folder paths automatically;
-there is no separate folder-build command. Omit the path to build the current
+there is no separate folder-build command. Use `--source .` to build the current
 directory, optionally including its subfolders:
 
 ```sh
-kobo build
-kobo build --recursive
-kobo build --output-directory ./build --name MyApp --publish-code
+kobo build --source .
+kobo build --source . --recursive
+kobo build --source . --output-directory ./build --name MyApp --publish-code
 ```
 
 Include subfolders of an explicit folder with `--recursive`:
 
 ```sh
-kobo build ./src --recursive --output-directory ./build --name MyApp --publish-code
+kobo build --source ./src --recursive --output-directory ./build --name MyApp --publish-code
 ```
 
 Files share a compilation context, including one generated `Global` class and
 one definition of each generated union per namespace. Without `--recursive`,
-subfolders are not searched. Discovery is case-insensitive for `.kobo` extensions
+subfolders are not searched. Discovery is case-insensitive for `.kobo` and `.kb` extensions
 and files are processed in ordinal path order. Recursive discovery skips `bin`,
 `obj`, and symbolic-link directories.
 
 Output defaults to the input folder, with the folder name as the assembly name.
 The output options work for file and folder inputs; when both are specified,
-`--output-directory` must precede `--name`. `--recursive` and `--publish-code`
+`--output-directory` must precede `--name`. `--source`, `--recursive`, and `--publish-code`
 can appear anywhere after the command. A missing/unreadable folder, no matching
 files, or a compilation failure reports an error and exits with code `1`.
 Any static `Main` in the combined sources selects a console application;
@@ -195,7 +245,7 @@ From a source checkout, run the unified file/folder build regression checks with
 
 For a complete Kobo-first introduction, see
 [The Kobo Programming Language](https://github.com/thinkmine/Kobo/blob/master/KOBO-LANGUAGE.md).
-Version 0.1.47 supports `Print(...)` and `Input()`/`Input("prompt")`, native
+Version 0.1.53 supports `Print(...)` and `Input()`/`Input("prompt")`, native
 `json` values with `StringValue` and implicit string conversion, and
 `prompt:Type` declarations with `${expression}` interpolation and `[tool]`
 functions. Prompt text outside interpolations is literal, even when it contains
@@ -204,9 +254,9 @@ written; `raw "..."` strings keep backslashes but still interpolate `${...}`.
 `@"..."` and `"""..."""` strings are errors. Select-first queries accept
 `skip <count> take <count>` before `project`, and a result step after the
 projection: `project <expression> | list`, `| first`, `| last`, `| count`, or,
-for numeric projections, `| average`, `| sum`, `| min`, and `| max`.
-`| average`, `| min`, and `| max` also accept a selector, as in
-`project planet | min(p => p.Length)`. See the [AI tutorial](https://github.com/thinkmine/Kobo/blob/master/KoboLang.TestHarness/input/tutorials/11.ai.kobo);
+for numeric projections, `| average`, `| sum`, `| min`, `| max`, `| range`, or
+`| aggregate(accumulator)`. `| average`, `| min`, and `| max` also accept a
+selector, as in `project planet | min(p => p.Length)`. See the [AI tutorial](https://github.com/thinkmine/Kobo/blob/master/KoboLang.TestHarness/input/tutorials/11.ai.kobo);
 the sample `kobo.ai.json` reads `OPENAI_API_KEY` from the environment at runtime.
 Standalone single-file builds accept `#:sdk`, `#:property`, and `#:package`;
 these are passed to the SDK build. Other app directives, including `#:project`,

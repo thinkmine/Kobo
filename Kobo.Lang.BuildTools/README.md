@@ -1,6 +1,6 @@
 # Kobo.Lang.BuildTools
 
-## Language version 0.1.47
+## Language version 0.1.53
 
 **NuGet package:** `thinkmine.kobo.lang.buildtools`
 
@@ -15,13 +15,13 @@ including IDE compilation. Older .NET Framework-based Visual Studio analyzer
 hosts are not supported. The consumer's target framework does not select the
 analyzer host runtime.
 
-The package automatically includes recursive `**/*.kobo` files as Roslyn
+The package automatically includes recursive `.kobo` and `.kb` files as Roslyn
 `AdditionalFiles`, excluding `bin`, `obj`, configured output/intermediate paths,
 SDK default exclusions, and files already included as `AdditionalFiles`.
 Existing additional-file metadata is preserved. Use `AdditionalFiles Remove`
 after the package targets import to explicitly exclude individual Kobo files.
 
-For example, create `Person.kobo`:
+For example, create `Person.kobo` or `Person.kb`:
 
 ```text
 module Example;
@@ -121,9 +121,9 @@ With this package installed, use normal project workflows in the
 consuming .NET project. Kobo files are discovered recursively automatically; no
 `kobo build` command or `--recursive` option is needed.
 
-For standalone Kobo assemblies, the separate CLI supports `kobo build` for the
-current folder, `kobo build ./src` for a selected folder, and
-`kobo build ./main.kobo` for one file. CLI folder builds are nonrecursive unless
+For standalone Kobo assemblies, the separate CLI supports `kobo build --source .` for the
+current folder, `kobo build --source ./src` for a selected folder, and
+`kobo build --source ./main.kobo` for one file. CLI folder builds are nonrecursive unless
 `--recursive` is supplied, and compile discovered files together into one
 assembly. See the [command-line compiler guide](../Kobo.Lang.Compiler/README.md)
 for installation and output options.

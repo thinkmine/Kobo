@@ -1,14 +1,33 @@
 #:script
 
+###
+# Advanced Variables
 
 
-
-
+## Lambdas
+Lambdas can be defined in kobo using a representation of the lambda signature as shows below
+###
 
 //lambdas
 var:()->void var18 = null
 var:()->int var19 = null
 var:(int)->int var20 = null
+
+//explicit declaration of a lambda function
+//a void lambda cannot return a value - uncomment this to see the error
+var:(string)->void lambda_3 = (x) =>
+{
+    Console.WriteLine("void lambda 2")
+}
+
+var:(string)->int lambda_4 = (x) =>
+{
+    return 77
+}
+
+###
+Lambdas can also participate in type inference like other variables
+###
 
 //type inference for lambda function
 var lamdba1 = () =>
@@ -22,23 +41,21 @@ var lambda_2 = ()=>
     Console.WriteLine("void lambda 2")
 }
 
-//explicit declaration of a lambda function
-//a void lambda cannot return a value - uncomment this to see the error
-var:(string)->void lambda_3 = (x) =>
-{
-    Console.WriteLine("void lambda 2")
-}
+###
+## First class json
+
+In kobo, json is a first class citizen.  You can define in in code without wrapping it in a string or anything of the sort.
+json values can also reference anything that is in scope of the local context where the variable is being declared.  In the sample
+below _n_ is an int variable that is being passed as the value of ```type``` in the json declaration
+###
 
 
-var:(string)->int lambda_4 = (x) =>
-{
-    return 77
-}
-
+var n = 9
 
 //Native json
-var:json information = {
-    "type": "music",
+var:json information =
+{
+    "type": n,
     "data":[
         "one",
         "two",
@@ -50,14 +67,27 @@ var:json information = {
     }
 }
 
+###
+The properties of the json object can be read using natural propery syntax.  We are reading the type, reading the data array as an array
+and drillign into the contact object to pull out the address field!
+###
+
 //json properties read with natural syntax
 Console.WriteLine(information.type)
 Console.WriteLine(information.data[1])
 Console.WriteLine(information.contact.address)
 
+###
+You can also use this same approach to update any values in the json as needed!
+###
+
 //and updated the same way
 information.type = "rock"
 information.contact.address = "99 avenue"
+
+###
+Finally, you can quickly and easily convert from json to a string and back both implicitly and explicityly through the StringValue property
+###
 
 //StringValue returns JSON text; assignment parses JSON text implicitly
 var:string json_text = information.StringValue

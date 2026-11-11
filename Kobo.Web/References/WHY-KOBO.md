@@ -2,7 +2,7 @@
 
 # Why Kobo?
 
-## Language version 0.1.47
+## Language version 0.1.53
 
 Kobo is an AI-conscious, general-purpose programming language built for the
 .NET ecosystem. Designed from the ground up with both human developers and AI

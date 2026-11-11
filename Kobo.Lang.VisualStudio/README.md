@@ -1,8 +1,8 @@
 # Kobo Language Support for Visual Studio
 
-## Extension version 0.1.47 (Kobo language 0.1.47)
+## Extension version 0.1.53 (Kobo language 0.1.53)
 
-This VSIX adds `.kobo` editing support to Visual Studio 2022 (17.14 or later)
+This VSIX adds `.kobo` and `.kb` editing support to Visual Studio 2022 (17.14 or later)
 and Visual Studio 2026 (Community, Professional, and Enterprise) on x64 and
 ARM64 Windows. A single VSIX supports both architectures. It shares the
 Kobo language server and TextMate
@@ -19,8 +19,8 @@ provided by the separate `thinkmine.kobo.lang.buildtools` NuGet package.
 
 ## Project integration and templates
 
-When a `.kobo` file is added to a supported SDK-style .NET project in a solution, the
-extension offers to install BuildTools 0.1.47 if it is not already installed.
+When a `.kobo` or `.kb` file is added to a supported SDK-style .NET project in a solution, the
+extension offers to install BuildTools 0.1.53 if it is not already installed.
 The prompt appears at most once per project per Visual Studio session; declining
 leaves the project unchanged. Installation uses the project's configured
 NuGet sources and reports failures in a dialog and the Visual Studio Activity
@@ -30,10 +30,10 @@ Standalone files, unsupported projects, and legacy project files are unaffected.
 The **Kobo Console Application** template creates a Kobo-only `net11.0`
 console project with a Kobo `Main` method. The **Kobo Enabled Console
 Application** template creates a `net11.0` console project with a Kobo
-source file compiled alongside it. Both templates reference BuildTools 0.1.47.
+source file compiled alongside it. Both templates reference BuildTools 0.1.53.
 Project builds require a .NET 11 compiler host with Roslyn 5.9 or later;
 older .NET Framework-based Visual Studio analyzer hosts cannot run the generator.
-The BuildTools package also requires `thinkmine.kobo.ai` 0.1.47 to be
+The BuildTools package also requires `thinkmine.kobo.ai` 0.1.53 to be
 available on a configured NuGet source.
 
 ## Requirements
@@ -42,7 +42,7 @@ available on a configured NuGet source.
 - .NET 11 runtime matching the Windows architecture (x64 or ARM64), with
   `dotnet` available on `PATH`; .NET 11 SDK to build projects
 
-Opening a `.kobo` file starts the bundled language server. If it cannot start,
+Opening a `.kobo` or `.kb` file starts the bundled language server. If it cannot start,
 Visual Studio shows an InfoBar; details from the server appear in the Visual
 Studio Activity Log. Install the .NET 11 runtime if `dotnet` is unavailable.
 

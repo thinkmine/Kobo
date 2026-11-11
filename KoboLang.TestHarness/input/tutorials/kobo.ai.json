@@ -1,7 +1,8 @@
 {
   "provider": "OpenAI",
-  "model": "gpt-4o-mini",
-  "key": "${OPENAI_API_KEY}",
+  "model": "gpt-5.2-chat",
+  "key": "{key}",
+  "endpoint": "url",
   "options": {
     "maxOutputTokens": 1000,
     "timeoutSeconds": 120,

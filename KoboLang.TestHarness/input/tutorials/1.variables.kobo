@@ -1,7 +1,28 @@
 #:script
 
+###
+# Variables in Kobo
+Kobo provides a consistent and explicit approach to variable declaration, emphasizing readability, type safety, 
+and clarity of intent. Variables are declared using the `var` keyword, followed by an optional type annotation 
+separated by a colon, such as `var:int age = 30;` for an explicitly typed integer or `var name = "John";` for an 
+inferred type. Kobo supports local variables, instance and static members, function parameters, and global properties, 
+each with defined scope and lifetime. Variables can represent primitive types, strings, objects, collections, tuples, unions, 
+functions, and user-defined types. Read-only declarations support values that cannot be reassigned, while global properties provide 
+controlled access to shared values. This consistent nomenclature and flexible typing model make Kobo code straightforward for both 
+human developers and AI coding agents to write, understand, and maintain.
+
+
+
+
+## The basics - simple variable assignment
+
+Note that in kobo variables must be assigned at the point when they are declared.
+kobo supports all the same types as c# with the same naming convention for them
+###
+
+
 //uncomment this to see the error
-//var:bool b = false
+//var:bool b
 
 //boolean
 var:bool var1 = true
@@ -31,19 +52,53 @@ var:string var16 = "30"
 var:object var17 = 10
 var:dynamic var18 = "something"
 
-//constants
-const:int CONSTANT = 100
+
+###
+You'll notice a few new things with this language.  Firstly, there is no need for a semi-colon.
+You can include it in your code if you still feel uncomfortable not having it, but we can get along
+without you specifying it.  You'll also note a common pattern for declaration (and you'll see it more as
+we get further into the language).  To declare a variable you follow the format:
+var:*[type name]* *[variable name]* = _value_. 
+> Note that there should be no spaces between var:*typename*.  
+
+Type inference can work by removing the type name portion of the declartion (along with the colon)
+###
 
 var var19 = 10
+
+###
+To quickly print results out you can use the _Print_ function.  Print emulates ```Console.WriteLine``` so it 
+can be used anywhere that method is used.
+###
+
+//writing to the console
+Print("This is writing to the console")
+
+###
+Kobo supports arrays and lists as well.  By default, defined collections of values will be treated as lists
+if not explicitly declared so the following code produces a ```List<string>``` named planets_list
+###
+
+//list of strings
+var planets_list = ["my","very","educated","mother","just","served","us","nine","pickles"]
+
+###
+While the code below will explicity create an array of strings
+###
 
 //arrays
 var:string[] planets_array = ["my","very","educated","mother","just","served","us","nine","pickles"]
 
+
 //list of strings
-var planets_list = ["my","very","educated","mother","just","served","us","nine","pickles"]
-var:list<int> list_of_numbers = [1,2,3,4,5,6,7,8]
+var inferred_planets_list = ["my","very","educated","mother","just","served","us","nine","pickles"]
 
 
+###
+Kobo also supports dictionary initializers.  Here the special type alias ```dictionary```, not to be confused with ```Dictionary``` is used. Both
+create the same dictionary instance. The value this is being set to is a *dictionary literal* and can be used anywhere in a kobo program where a
+dictionary is requires.  Kobo will also infer dictionary types based on it.
+###
 
 //dictionary literals
 var:dictionary<string,int> ages = 
@@ -60,17 +115,39 @@ var ages_2 =
 
 }
 
+###
 
-//writing to the console
-Print("This is writing to the console")
+#### 
+## Other kinds of things
+---
+We can expand this pattern a bit further to *[kind]*:*[type]* *[name]* *[definition]*
+using this general principle, *constants* are defines as follows:
+###
+
+//constants
+const:int CONSTANT = 100
+
+
+###
+We previously showed writing out to the console with the Print command.  Kobo also has an ```Input``` command for 
+taking input from the console.
+###
+
 
 //reading values from the console
 var:string input = Input()
 Print(input)
 
+###
+```Input``` can take also accept an argument.  When this is passed in it will be presented to the user as a prompt.  
+###
+
 //prompting the user as part of reading values from the console
 var:string input2 = Input("enter some text: ")
 Print(input2)
+
+
+
 
 Print("Sample complete!")
 

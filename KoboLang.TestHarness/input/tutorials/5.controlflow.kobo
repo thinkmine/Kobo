@@ -1,0 +1,84 @@
+#:script
+###
+# Control flow in Kobo
+Kobo provides structured control flow constructs for managing program execution, including 
+conditional branching, iteration, pattern-based selection, and exception handling. Conditional statements 
+such as `if` and `else` allow execution to depend on Boolean expressions, while loops enable repeated operations over ranges, 
+collections, and other sequences. Selection constructs support branching based on values and conditions, 
+including scenarios involving union types. Kobo also supports early termination and iteration control through statements 
+such as `return`, `break`, and `continue`, along with exception handling for managing runtime errors. 
+These constructs emphasize readable, predictable execution paths and clear expression of program intent, making control flow 
+straightforward for both human developers and AI coding agents to understand and maintain.
+
+
+Control flow in kobo is relatively straighforward.  The big difference from c# is that parenthesis are
+not required.
+###
+
+var:string input = ""
+
+###
+Here we take input from the user and decide whether to continue or not.  (if the user passes end we break)
+###
+//while loops (no need for parenthesis)
+while true
+{
+
+    input = Input("Enter a command> ")
+
+    //if statements (no need for parenthesis)
+    if input == "end"
+    {
+        break   
+    }
+}
+
+###
+```foreach``` statements also have optional paranthesis.  The general rule is that parenthesis should be used
+when the command is spread across multiple lines as shown here.  If this is attempted without parenthesis the
+program would fail
+###
+    
+    //foreach looping
+    foreach (
+    char item in 
+    input)
+    {
+        Console.Write("${item}-")
+    }
+    Print()
+
+###
+Kobo does not have for loops, but the capability can be created within the foreach with what we
+call an _iteration expression_.  They essentially count numbers forwards or backwards based on a step
+you provide.  When no step is specified the count is 1 or -1 depending on if the start is bigger than the
+end.  ```[0 to 10]``` counts 0 to 10 by one.  ```[0 to 10 by 5]``` counts o to 10 by 5. ```[12 to 0 by -3]```
+counts down from 12 to 0 by 3.
+###
+
+    //loop counting up by 1
+    foreach char item in [0 to 10]
+    {
+        Print("1 ${item}")
+    }
+
+    //loop counting down by 1
+    foreach char item in [10 to 0]
+    {
+        Print("-1 ${item}")
+    }
+
+    //loop counting up by 5
+    foreach char item in [0 to 10 by 5]
+    {
+        Print("5 ${item}")
+    }
+
+    //loop counting down by -3
+    foreach char item in [12 to 0 by -3]
+    {
+        Print("-3 ${item}")
+    }
+
+    Print("You said: ${input}");
+
